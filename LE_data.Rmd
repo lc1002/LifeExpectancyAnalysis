@@ -1,11 +1,11 @@
 ---
-title: "Life_Expectancy_data"
-output: html_document
+title: "Merge Data"
+output: github_document
 ---
 
 ```{r}
 library(tidyverse)
-library(zoo)
+library(mice)
 ```
 
 
@@ -90,14 +90,13 @@ check_na = function(x) {
 ## Check for NA values 
 colSums(is.na(life_expectancy_df))
 
+tempData <- mice(life_expectancy_df,m=5,maxit=50,meth='cart',seed=100)
+Complete_df <- complete(tempData,1)
 
+colSums(is.na(Complete_df))
 
-df = life_expectancy_df %>% 
-  group_by(country) %>% 
-  imputeTS::na_interpolation(life_expectancy_df$lifeexpectancy, groupby = country, option = "linear", maxgap = Inf)
+write.csv(Complete_df, file = ".\\data/Complete Data", row.names = F)
 
-
-colSums(is.na(df))
 
 ```
 
