@@ -1,32 +1,77 @@
 ---
-title: "life_expectancy_data"
-author: "AnMei Chen"
-date: "1/2/2022"
+title: "Life_Expectancy_data"
 output: html_document
 ---
 
 ```{r}
 library(tidyverse)
+library(zoo)
 ```
 
 
 ```{r}
 life_expectancy = 
   read_csv("data/life_expectancy.csv") %>% 
-  janitor::clean_names()
+  janitor::clean_names() %>% 
+  mutate(country = recode(country,
+      "AntiguaandBarbuda" = "Antigua and Barbuda",
+      "Bolivia(PlurinationalStateof)" = "Bolivia (Plurinational State of)", 
+      "BosniaandHerzegovina" = "Bosnia and Herzegovina",
+      "BruneiDarussalam" = "Brunei Darussalam",
+      "BurkinaFaso" = "Burkina Faso",
+      "CostaRica" = "Costa Rica",
+      "Coted'Ivoire" = "Cote d'Ivoire",
+      "CaboVerde" = "Cabo Verde",
+      "CentralAfricanRepublic" = "Central African Republic",
+      "CookIslands" = "Cook Islands",
+      "Czechia" = "Czech Republic",
+      "DemocraticPeople'sRepublicofKorea" = "Korea (Democratic People's Republic of)",
+      "DemocraticRepublicoftheCongo" = "Congo (Democratic Republic of the)",
+      "DominicanRepublic" = "Dominican Republic",
+      "ElSalvador" = "El Salvador",
+      "EquatorialGuinea" = "Equatorial Guinea",
+      "Iran(IslamicRepublicof)" = "Iran (Islamic Republic of)",
+      "LaoPeople'sDemocraticRepublic" = "Lao People's Democratic Republic",
+      "MarshallIslands" = "Marshall Islands",
+      "Micronesia(FederatedStatesof)" = "Micronesia (Federated States of)",
+      "NewZealand" = "New Zealand",
+      "PapuaNewGuinea" = "Papua New Guinea",
+      "RepublicofKorea" = "Korea (Republic of)",
+      "RepublicofMoldova" = "Moldova (Republic of)",
+      "RussianFederation" = "Russian Federation",
+      "SaintKittsandNevis" = "Saint Kitts and Nevis",
+      "SaintLucia" = "Saint Lucia",
+      "SaintVincentandtheGrenadines" = "Saint Vincent and the Grenadines",
+      "SanMarino" = "San Marino",
+      "SaoTomeandPrincipe" = "Sao Tome and Principe",
+      "SaudiArabia" = "Saudi Arabia",
+      "SierraLeone" = "Sierra Leone",
+      "SolomonIslands" = "Solomon Islands",
+      "SouthAfrica" = "South Africa",
+      "SouthSudan" = "South Sudan",
+      "SriLanka" = "Sri Lanka",
+      "SyrianArabRepublic" = "Syrian Arab Republic",
+      "TheformerYugoslavrepublicofMacedonia" = "Macedonia (the former Yugoslav Republic of)",
+      "TrinidadandTobago" = "Trinidad and Tobago",
+      "UnitedArabEmirates" = "United Arab Emirates",
+      "UnitedKingdomofGreatBritainandNorthernIreland" = "United Kingdom of Great Britain and Northern Ireland",
+      "UnitedRepublicofTanzania" = "Tanzania, United Republic of",
+      "UnitedStatesofAmerica" = "United States of America",
+      "Venezuela(BolivarianRepublicof)" = "Venezuela (Bolivarian Republic of)",
+      "VietNam" = "Viet Nam")) 
 
 continent_df =
   read_csv("data/countryContinent.csv") %>%
   janitor::clean_names() %>% 
-  select(country,continent)
+  select(country,continent) 
 
 # df with continent
 
 life_expectancy_df = 
   life_expectancy %>% 
-  inner_join(continent_df, by = "country") %>% 
+  left_join(continent_df, by = "country") %>% 
   relocate(country,continent) %>% 
-  mutate(year = as.character(year))
+  mutate(year = as.character(year)) 
 
 ```
 
@@ -42,46 +87,17 @@ check_na = function(x) {
   return(na)
 }
 
-# 6
-check_na(life_expectancy_df$adult_mortality)
+## Check for NA values 
+colSums(is.na(life_expectancy_df))
 
-# 6
-check_na(life_expectancy_df$lifeexpectancy)
 
-#140
-check_na(life_expectancy_df$alcohol)
 
-#439
-check_na(life_expectancy_df$hepatitis_b)
+df = life_expectancy_df %>% 
+  group_by(country) %>% 
+  imputeTS::na_interpolation(life_expectancy_df$lifeexpectancy, groupby = country, option = "linear", maxgap = Inf)
 
-#17
-check_na(life_expectancy_df$bmi)
 
-#8
-check_na(life_expectancy_df$polio)
+colSums(is.na(df))
 
-#158
-check_na(life_expectancy_df$totalexpenditure)
-
-#8
-check_na(life_expectancy_df$diphtheria)
-
-#139
-check_na(life_expectancy_df$gdp)
-
-#280
-check_na(life_expectancy_df$population)
-
-#17
-check_na(life_expectancy_df$thinness1_19years)
-
-#17
-check_na(life_expectancy_df$thinness5_9years)
-
-#20
-check_na(life_expectancy_df$incomecompositionofresources)
-
-# 18
-check_na(life_expectancy_df$schooling)
 ```
 
