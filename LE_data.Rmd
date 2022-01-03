@@ -1,0 +1,87 @@
+---
+title: "life_expectancy_data"
+author: "AnMei Chen"
+date: "1/2/2022"
+output: html_document
+---
+
+```{r}
+library(tidyverse)
+```
+
+
+```{r}
+life_expectancy = 
+  read_csv("data/life_expectancy.csv") %>% 
+  janitor::clean_names()
+
+continent_df =
+  read_csv("data/countryContinent.csv") %>%
+  janitor::clean_names() %>% 
+  select(country,continent)
+
+# df with continent
+
+life_expectancy_df = 
+  life_expectancy %>% 
+  inner_join(continent_df, by = "country") %>% 
+  relocate(country,continent) %>% 
+  mutate(year = as.character(year))
+
+```
+
+
+```{r}
+check_na = function(x) {
+  
+  na = 
+    life_expectancy_df %>%  
+    filter(is.na(x)) %>%  
+    count()
+  
+  return(na)
+}
+
+# 6
+check_na(life_expectancy_df$adult_mortality)
+
+# 6
+check_na(life_expectancy_df$lifeexpectancy)
+
+#140
+check_na(life_expectancy_df$alcohol)
+
+#439
+check_na(life_expectancy_df$hepatitis_b)
+
+#17
+check_na(life_expectancy_df$bmi)
+
+#8
+check_na(life_expectancy_df$polio)
+
+#158
+check_na(life_expectancy_df$totalexpenditure)
+
+#8
+check_na(life_expectancy_df$diphtheria)
+
+#139
+check_na(life_expectancy_df$gdp)
+
+#280
+check_na(life_expectancy_df$population)
+
+#17
+check_na(life_expectancy_df$thinness1_19years)
+
+#17
+check_na(life_expectancy_df$thinness5_9years)
+
+#20
+check_na(life_expectancy_df$incomecompositionofresources)
+
+# 18
+check_na(life_expectancy_df$schooling)
+```
+
