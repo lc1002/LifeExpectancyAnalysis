@@ -1,0 +1,131 @@
+---
+title: "exploratory"
+author: "AnMei Chen"
+date: "1/4/2022"
+output: html_document
+---
+
+```{r}
+library(tidyverse)
+library(plotly)
+library(RColorBrewer)
+library(gganimate)
+
+knitr::opts_chunk$set(
+  echo = TRUE,
+  fig.asp = .6,
+  fig.width = 6,
+  fig.height = 4,
+  out.height = 400,
+  dpi = 800,
+  out.width = "80%"
+)
+
+theme_set(theme_minimal() + theme(legend.position = "bottom"))
+
+options(
+  ggplot2.continuous.colour = "viridis",
+  ggplot2.continuous.fill = "viridis"
+)
+
+scale_colour_discrete = scale_colour_viridis_d
+scale_fill_discrete = scale_fill_viridis_d
+```
+
+
+```{r}
+life_exp_df = 
+  read_csv("data/Complete Data") %>% 
+  mutate(
+    country = recode(country, "United Kingdom of Great Britain and Northern Ireland" = "United Kingdom")
+  )
+```
+
+
+```{r}
+world_life_exp =
+  life_exp_df %>% 
+  group_by(year) %>% 
+  summarize(avg = mean(lifeexpectancy)) %>% 
+  ggplot(aes(x = year, y = avg)) +
+  geom_line(color = "#377EB8") +
+  geom_point(alpha = .5, color = "#377EB8") +
+  labs(
+    title = "Global Trend of Life Expectancy From 2000 to 2015",
+    x = "Year",
+    y = "Life Expectancy"
+  ) +
+  transition_reveal(as.integer(year))
+
+animate(world_life_exp, duration = 10, renderer = gifski_renderer())
+
+#ggplotly(world_life_exp)
+```
+
+```{r}
+life_exp_continent =
+  life_exp_df %>%
+  group_by(continent,year) %>% 
+  summarize(avg = mean(lifeexpectancy)) %>% 
+  ggplot(aes(x = year, y = avg, color = continent)) +
+  geom_line() +
+  geom_point(alpha = 0.5) +
+  labs(
+    title = "World Life Expectancy From 2000 to 2015 By Continent",
+    x = "Year",
+    y = "Life Expectancy"
+  ) +
+  transition_reveal(as.integer(year))
+
+animate(life_exp_continent, duration = 10, renderer = gifski_renderer())
+
+#ggplotly(life_exp_continent)
+```
+
+
+```{r}
+life_exp_status =
+  life_exp_df %>%
+  group_by(status,year) %>% 
+  summarize(avg = mean(lifeexpectancy)) %>% 
+  ggplot(aes(x = year, y = avg, color = status)) +
+  geom_line() +
+  geom_point(alpha = 0.5) +
+  labs(
+    title = "World Life Expectancy From 2000 to 2015 By Economy Status",
+    x = "Year",
+    y = "Life Expectancy"
+  ) +
+  transition_reveal(as.integer(year))
+
+animate(life_exp_status, duration = 10, renderer = gifski_renderer())
+
+#ggplotly(life_exp_status)
+```
+
+
+
+```{r}
+gdp_le =
+  life_exp_df %>%
+  mutate(
+    continent = as.factor(continent),
+    continent = fct_relevel(continent, c("Africa","Americas","Oceania","Asia", "Europe"))) %>% 
+  ggplot(aes(x = lifeexpectancy, y = gdp, color = country)) +
+  geom_point(alpha = .6) +
+  labs(
+    title = "World life Expectancy by Countries with GDP Values",
+    x = "Life Expectancy",
+    y = "GDP Value"
+  ) +
+  facet_grid(.~ continent)  +
+  guides(
+    shape = guide_legend(override.aes = list(size = 3)),
+    color = guide_legend(override.aes = list(size = 3)))  +
+  theme(legend.title = element_text(size = 7), 
+        legend.text  = element_text(size = 6),
+        legend.key.size = unit(4, "cm"))
+
+ggplotly(gdp_le)
+
+```
