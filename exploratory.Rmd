@@ -1,7 +1,5 @@
 ---
-title: "exploratory"
-author: "AnMei Chen"
-date: "1/4/2022"
+title: "exploratory analysis"
 output: html_document
 ---
 
@@ -35,7 +33,7 @@ scale_fill_discrete = scale_fill_viridis_d
 
 ```{r}
 life_exp_df = 
-  read_csv("data/Complete Data") %>% 
+  read_csv("data/Complete_Data.CSV") %>% 
   mutate(
     country = recode(country, "United Kingdom of Great Britain and Northern Ireland" = "United Kingdom")
   )
@@ -53,7 +51,8 @@ world_life_exp =
   labs(
     title = "Global Trend of Life Expectancy From 2000 to 2015",
     x = "Year",
-    y = "Life Expectancy"
+    y = "Life Expectancy",
+    color = "Continent"
   ) +
   transition_reveal(as.integer(year))
 

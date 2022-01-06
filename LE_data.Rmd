@@ -1,6 +1,6 @@
 ---
 title: "Merge Data"
-output: github_document
+output: html_document
 ---
 
 ```{r}
@@ -95,7 +95,7 @@ Complete_df <- complete(tempData,1)
 
 colSums(is.na(Complete_df))
 
-write.csv(Complete_df, file = ".\\data/Complete Data", row.names = F)
+write.csv(Complete_df, file = ".\\data/Complete_Data", row.names = F)
 
 
 ```

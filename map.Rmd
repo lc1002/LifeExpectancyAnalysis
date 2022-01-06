@@ -1,0 +1,80 @@
+---
+title: "Exploratory Map"
+output: html_document
+---
+
+```{r}
+library(tidyverse)
+library(leaflet)
+library(rgdal)
+library(sf)
+
+knitr::opts_chunk$set(
+  fig.width = 6,
+  fig.asp = .6,
+  out.width = "90%"
+)
+
+theme_set(theme_minimal() + theme(legend.position = "bottom"))
+
+options(
+  ggplot2.continuous.colour = "viridis",
+  ggplot2.continuous.fill = "viridis"
+)
+
+scale_colour_discrete = scale_colour_viridis_d
+scale_fill_discrete = scale_fill_viridis_d
+```
+
+
+```{r}
+life_exp_df = 
+  read_csv("data/Complete_Data.CSV") %>% 
+  mutate(
+    country = recode(country, 
+                     "United Kingdom of Great Britain and Northern Ireland" = "United Kingdom",
+                     "Bolivia (Plurinational State of)" = "Bolivia",
+                     "Cabo Verde" = "Cape Verde",
+                     "Korea (Democratic People's Republic of)" = "Korea, Democratic People's Republic of",
+                     "Congo (Democratic Republic of the)" = "Democratic Republic of the Congo",
+                     "Libya" = "Liberia",
+                     "Micronesia (Federated States of)" = "Micronesia, Federated States of",
+                     "Myanmar" = "Burma",
+                     "Korea (Republic of)" = "Korea, Republic of",
+                     "Moldova (Republic of)" = "Republic of Moldova",
+                     "Russian Federation" = "Russia",
+                     "Macedonia (the former Yugoslav Republic of)" = "The former Yugoslav Republic of Macedonia",
+                     "Tanzania, United Republic of" = "United Republic of Tanzania",
+                     "United States of America" = "United States",
+                     "Venezuela (Bolivarian Republic of)" = "Venezuela"),
+    click_label = 
+      str_c(country, "</b><br>", "Life expectancy: ", lifeexpectancy,"<br>", "Population: ", population,"<br>", "GDP Values: ", gdp, "<br>")) %>% 
+  rename("NAME" = "country")
+
+world_spdf =
+  st_read(dsn = path.expand("./data/TM_WORLD_BORDERS-0"),
+             layer = "TM_WORLD_BORDERS-0.3")
+
+map_df = 
+  st_as_sf(world_spdf) %>% 
+  right_join(life_exp_df, by = "NAME")
+
+
+```
+
+```{r}
+pal =
+  colorNumeric(
+  palette = "YlOrBr",
+  domain = map_df$lifeexpectancy)
+
+map_df %>% 
+  leaflet() %>% 
+  addTiles() %>%
+  setView(0, 0, zoom= 1) %>%
+  addPolygons(fillColor = ~pal(lifeexpectancy),popup = ~click_label,stroke=FALSE) %>% 
+  addLegend(position = "bottomright", pal = pal, values = map_df$lifeexpectancy,
+          title = "life expectancy",
+          opacity = 0.5)
+```
+
