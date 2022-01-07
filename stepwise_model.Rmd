@@ -18,7 +18,7 @@ library(Metrics)
 
 ```{r}
 le_df = 
-  read_csv("./data/Complete Data") %>% 
+  read_csv("./data/Complete_Data.CSV") %>% 
   rename("HDI" = "incomecompositionofresources", "percent_exp" = "percentageexpenditure", "total_exp" = "totalexpenditure", "le" = "lifeexpectancy", "adult_mort" = "adult_mortality", "thin_1_19" = "thinness1_19years", "thin_5_9" = "thinness5_9years", "under_five" = "under_fivedeaths")
 ```
 
@@ -33,6 +33,10 @@ corrplot(cor(le_df), type = "upper", diag = FALSE)
 
 ## Stepwise by AIC 
 ```{r}
+le_df = 
+  read_csv("./data/Complete_Data.CSV") %>% 
+  rename("HDI" = "incomecompositionofresources", "percent_exp" = "percentageexpenditure", "total_exp" = "totalexpenditure", "le" = "lifeexpectancy", "adult_mort" = "adult_mortality", "thin_1_19" = "thinness1_19years", "thin_5_9" = "thinness5_9years", "under_five" = "under_fivedeaths")
+
 full_model =
   lm(le ~ adult_mort + infantdeaths + alcohol + percent_exp + hepatitis_b + measles + bmi + under_five + polio + total_exp + diphtheria + hiv_aids + gdp + population + thin_1_19 + thin_5_9 + HDI + schooling, data = le_df)
 
@@ -159,3 +163,10 @@ model = train(le ~ adult_mort + infantdeaths + alcohol + bmi + polio + total_exp
 model$finalModel
 print(model)
 ```
+
+## Added variable plot
+
+```{r}
+avPlots(final_stepwise)
+```
+
