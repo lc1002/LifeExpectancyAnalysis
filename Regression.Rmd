@@ -26,7 +26,7 @@ le_df =
   le_df %>%
   dplyr::select(-c(country,continent,year,status))
 
-corrplot(cor(le_df), type = "upper", diag = FALSE)
+corrplot(cor(le_df), type = "upper", diag = FALSE, method = "square", addCoef.col = "black", number.cex = .5, tl.col = "black", tl.cex = .9)
 ```
 
 ## Stepwise by AIC 
