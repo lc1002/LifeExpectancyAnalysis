@@ -164,6 +164,14 @@ model$finalModel
 print(model)
 ```
 
+## normalized RMSE
+
+```{r}
+rmse = model$results$RMSE / (max(no_influ_le$le) - min(no_influ_le$le))
+rmse
+```
+
+
 ## Added variable plot
 
 ```{r}

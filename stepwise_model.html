@@ -648,6 +648,12 @@ model$finalModel</code></pre>
 ## 
 ## Tuning parameter &#39;intercept&#39; was held constant at a value of TRUE</code></pre>
 </div>
+<div id="normalized-rmse" class="section level2">
+<h2>normalized RMSE</h2>
+<pre class="r"><code>rmse = model$results$RMSE / (max(no_influ_le$le) - min(no_influ_le$le))
+rmse</code></pre>
+<pre><code>## [1] 0.06787893</code></pre>
+</div>
 <div id="added-variable-plot" class="section level2">
 <h2>Added variable plot</h2>
 <pre class="r"><code>avPlots(final_stepwise)</code></pre>

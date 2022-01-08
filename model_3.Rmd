@@ -137,6 +137,14 @@ model$finalModel
 print(model)
 ```
 
+## normalized RMSE
+
+```{r}
+rmse = model$results$RMSE / (max(no_influ_le$bc_le) - min(no_influ_le$bc_le))
+rmse
+```
+
+
 ## Added variable plot
 
 ```{r}
@@ -171,6 +179,14 @@ model = train(le ~ hepatitis_b + polio + total_exp + diphtheria + measles + gdp 
 model$finalModel
 print(model)
 ```
+
+## normalized RMSE
+
+```{r}
+rmse = model$results$RMSE / (max(no_influ_le$le) - min(no_influ_le$le))
+rmse
+```
+
 
 ## Added variable plot
 

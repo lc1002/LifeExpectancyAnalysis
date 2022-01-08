@@ -518,6 +518,12 @@ model$finalModel</code></pre>
 ## 
 ## Tuning parameter &#39;intercept&#39; was held constant at a value of TRUE</code></pre>
 </div>
+<div id="normalized-rmse" class="section level2">
+<h2>normalized RMSE</h2>
+<pre class="r"><code>rmse = model$results$RMSE / (max(no_influ_le$bc_le) - min(no_influ_le$bc_le))
+rmse</code></pre>
+<pre><code>## [1] 0.1094716</code></pre>
+</div>
 <div id="added-variable-plot" class="section level2">
 <h2>Added variable plot</h2>
 <pre class="r"><code>avPlots(no_influ_model_3_bc)</code></pre>
@@ -611,6 +617,12 @@ model$finalModel</code></pre>
 ##   5.015535  0.689114  3.763082
 ## 
 ## Tuning parameter &#39;intercept&#39; was held constant at a value of TRUE</code></pre>
+<div id="normalized-rmse-1" class="section level2">
+<h2>normalized RMSE</h2>
+<pre class="r"><code>rmse = model$results$RMSE / (max(no_influ_le$le) - min(no_influ_le$le))
+rmse</code></pre>
+<pre><code>## [1] 0.1092709</code></pre>
+</div>
 <div id="added-variable-plot-1" class="section level2">
 <h2>Added variable plot</h2>
 <pre class="r"><code>avPlots(no_influ_model_3)</code></pre>
