@@ -24,7 +24,7 @@ le_df =
 
 ```{r}
 model_4 =
-  lm(le ~ year + HDI + status + bmi + gdp + population + schooling + year * HDI + status * HDI + status * schooling, data = le_df)
+  lm(le ~ year + HDI + status + bmi + gdp + population + schooling + year * HDI + status * HDI, data = le_df)
 summary(model_4)
 ```
 
@@ -56,10 +56,10 @@ le_df =
   le_df %>% 
   mutate(bc_le = (le)^2)
 
-model_4_bc = lm(bc_le ~ year + HDI + status + bmi + gdp + population + schooling + year * HDI + status * HDI + status * schooling, data = le_df)
+model_4_bc = lm(bc_le ~ year + HDI + status + bmi + gdp + population + schooling + year * HDI + status * HDI, data = le_df)
 summary(model_4_bc)
 
-model_4 = lm(le ~ year + HDI + status + bmi + gdp + population + schooling + year * HDI + status * HDI + status * schooling, data = le_df)
+model_4 = lm(le ~ year + HDI + status + bmi + gdp + population + schooling + year * HDI + status * HDI, data = le_df)
 summary(model_4)
 
 # compare diagnostic plots
@@ -99,7 +99,7 @@ influential_obs = as.numeric(names(cook)[(cook > cutoff)])
 #define new data frame with influential points removed
 no_influ_le = le_df[-influential_obs, ]
 
-no_influ_model_4_bc = lm(bc_le ~ year + HDI + status + bmi + gdp + population + schooling + year * HDI + status * HDI + status * schooling, data = no_influ_le)
+no_influ_model_4_bc = lm(bc_le ~ year + HDI + status + bmi + gdp + population + schooling + year * HDI + status * HDI, data = no_influ_le)
 summary(no_influ_model_4_bc)
 ```
 
@@ -108,10 +108,10 @@ summary(no_influ_model_4_bc)
 ```{r}
 # compare models with and without influential observations
 
-no_influ_model_4_bc = lm(bc_le ~ year + HDI + status + bmi + gdp + population + schooling + year * HDI + status * HDI + status * schooling, data = no_influ_le)
+no_influ_model_4_bc = lm(bc_le ~ year + HDI + status + bmi + gdp + population + schooling + year * HDI + status * HDI, data = no_influ_le)
 summary(no_influ_model_4_bc)
 
-model_4_bc = lm(bc_le ~ year + HDI + status + bmi + gdp + population + schooling + year * HDI + status * HDI + status * schooling, data = le_df)
+model_4_bc = lm(bc_le ~ year + HDI + status + bmi + gdp + population + schooling + year * HDI + status * HDI, data = le_df)
 summary(model_4_bc)
 
 ```
@@ -131,7 +131,7 @@ set.seed(1)
 train = trainControl(method = "cv", number = 5)
 
 # Fit the 4-variables model
-model = train(bc_le ~ year + HDI + status + bmi + gdp + population + schooling + year * HDI + status * HDI + status * schooling, data = no_influ_le, trControl = train, method = 'lm', na.action = na.pass)
+model = train(bc_le ~ year + HDI + status + bmi + gdp + population + schooling + year * HDI + status * HDI, data = no_influ_le, trControl = train, method = 'lm', na.action = na.pass)
 
 model$finalModel
 print(model)
