@@ -1,5 +1,5 @@
 ---
-title: "exploratory analysis"
+title: "Exploratory Analysis"
 output: html_document
 ---
 
@@ -8,6 +8,9 @@ library(tidyverse)
 library(plotly)
 library(RColorBrewer)
 library(gganimate)
+library(ggplot2)
+library(viridis)
+
 
 knitr::opts_chunk$set(
   echo = TRUE,
@@ -128,3 +131,27 @@ gdp_le =
 ggplotly(gdp_le)
 
 ```
+
+
+### To vizualize correlation between the development status of a country and Life expectancy
+
+```{r}
+develop_plt = 
+  life_exp_df %>% 
+  ggplot(aes(x = status, y = lifeexpectancy, fill = status))+
+  geom_violin(width=1) +
+  geom_boxplot(width=0.1, color = "red", alpha = 0.2) +
+  scale_fill_hue(c=45, l=80) +
+  theme(
+      legend.position="none",
+      plot.title = element_text(size=11)
+    ) +
+  labs(
+    x = "Development Status",
+    y = "Life Expectancy",
+    title = "Life Expectancy VS. Development Status"
+  ) 
+
+develop_plt
+```
+
