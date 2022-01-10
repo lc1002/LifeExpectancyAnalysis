@@ -1,0 +1,109 @@
+---
+title: "cross_validation"
+author: "AnMei Chen"
+date: "1/10/2022"
+output: html_document
+---
+
+```{r}
+library(tidyverse)
+library(modelr)
+library(mgcv)
+
+knitr::opts_chunk$set(
+  echo = TRUE,
+  fig.asp = .6,
+  fig.width = 6,
+  fig.height = 4,
+  out.height = 400,
+  dpi = 800,
+  out.width = "90%"
+)
+
+theme_set(theme_minimal())
+
+options(
+  ggplot2.continuous.colour = "viridis",
+  ggplot2.continuous.fill = "viridis"
+)
+
+scale_colour_discrete = scale_colour_viridis_d
+scale_fill_discrete = scale_fill_viridis_d
+```
+
+
+```{r}
+le_df = 
+  read_csv("./data/Complete_Data.CSV") %>% 
+  rename("HDI" = "incomecompositionofresources", "percent_exp" = "percentageexpenditure", "total_exp" = "totalexpenditure", "le" = "lifeexpectancy", "adult_mort" = "adult_mortality", "thin_1_19" = "thinness1_19years", "thin_5_9" = "thinness5_9years", "under_five" = "under_fivedeaths")
+```
+
+
+```{r}
+mod_1 = lm(le ~ adult_mort + bmi + polio + diphtheria + hiv_aids + thin_5_9 + HDI, data = le_df)
+
+mod_2 = lm(le ~ status + bmi + population + thin_1_19 + thin_5_9 + status * bmi + status * thin_1_19 + status * thin_5_9, data = le_df)
+             
+mod_3 = lm(le ~ status + polio + total_exp + diphtheria + gdp + schooling + total_exp * gdp, data = le_df)
+
+mod_4 = lm(le ~ polio + total_exp + diphtheria + hiv_aids + thin_1_19, data = le_df)
+
+mod_5 = lm(le ~ adult_mort + bmi, data = le_df)
+
+mod_6 = lm(le ~ year + adult_mort + infantdeaths + percent_exp + bmi + under_five + polio + diphtheria + hiv_aids + gdp + thin_5_9, data = le_df)
+```
+
+
+```{r}
+set.seed(2)
+
+cv_df = 
+  crossv_mc(le_df,100) %>% 
+  mutate(
+    train = map(train, as_tibble),
+    test = map(test, as_tibble)
+  ) %>% 
+  mutate(
+    mod_1 = map(train, ~lm(formula = formula(mod_1), data = .x)),
+    mod_2 = map(train, ~lm(formula = formula(mod_2), data = .x)),
+    mod_3 = map(train, ~lm(formula = formula(mod_3), data = .x)),
+    mod_4 = map(train, ~lm(formula = formula(mod_4), data = .x)),
+    mod_5 = map(train, ~lm(formula = formula(mod_5), data = .x)),
+    mod_6 = map(train, ~lm(formula = formula(mod_6), data = .x))
+    ) %>% 
+  mutate(
+    rmse_1 = map2_dbl(mod_1, test, ~rmse(model = .x, data = .y)),
+    rmse_2 = map2_dbl(mod_2, test, ~rmse(model = .x, data = .y)),
+    rmse_3 = map2_dbl(mod_3, test, ~rmse(model = .x, data = .y)),
+    rmse_4 = map2_dbl(mod_4, test, ~rmse(model = .x, data = .y)),
+    rmse_5 = map2_dbl(mod_5, test, ~rmse(model = .x, data = .y)),
+    rmse_6 = map2_dbl(mod_6, test, ~rmse(model = .x, data = .y))
+    )
+```
+
+
+```{r}
+cv_df %>% 
+  pivot_longer(
+    rmse_1:rmse_6,
+    names_to = "model", 
+    values_to = "rmse",
+    names_prefix = "rmse_") %>% 
+  mutate(model = fct_inorder(model),
+         model = fct_recode(model, "Model 1" = "1",
+                                   "Model 2" = "2",
+                                   "Model 3" = "3",
+                                   "Model 4" = "4",
+                                   "Model 5" = "5",
+                                   "Model 6" = "6")
+         ) %>% 
+  ggplot(aes(x = model, y = rmse, fill = model)) + 
+  geom_violin() + 
+  labs(x = "Model",
+       y = "RMSE", 
+       title = "Cross Validation") +
+  scale_fill_brewer(type = 'seq', palette = 'Blues') +
+  theme(legend.position = 'none',
+        plot.title = element_text(hjust = 0.5))
+```
+
