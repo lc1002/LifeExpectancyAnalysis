@@ -25,16 +25,10 @@ le_df =
 ```{r}
 model_7 =
   lm(le ~ status + percent_exp + HDI + adult_mort + infantdeaths + schooling, data = le_df)
+
 summary(model_7)
 
-model_7_in =
-  lm(le ~ status + percent_exp + HDI + adult_mort + infantdeaths + schooling + status * percent_exp, data = le_df)
-summary(model_7_in)
-
-anova(model_7, model_7_in)
-
-model_7 = model_7_in
-summary(model_7)
+check_collinearity(model_7)
 ```
 
 ## Use diagnostic plots to check model 3
@@ -73,10 +67,10 @@ bcle_df %>%
   ggplot(aes(x = bc_le)) +
   geom_density()
 
-model_7_bc = lm(bc_le ~ status + percent_exp + HDI + schooling + adult_mort + infantdeaths + status * percent_exp, data = bcle_df)
+model_7_bc = lm(bc_le ~ status + percent_exp + HDI + adult_mort + infantdeaths + schooling, data = bcle_df)
 summary(model_7_bc)
 
-model_7 = lm(le ~ status + percent_exp + HDI + schooling + adult_mort + infantdeaths + status * percent_exp, data = le_df)
+model_7 = lm(le ~ status + percent_exp + HDI + adult_mort + infantdeaths + schooling, data = le_df)
 summary(model_7)
 
 # compare diagnostic plots
@@ -116,7 +110,7 @@ influential_obs = as.numeric(names(cook)[(cook > cutoff)])
 #define new data frame with influential points removed
 no_influ_le = bcle_df[-influential_obs, ]
 
-no_influ_model_7 = lm(bc_le ~ status + percent_exp + HDI + schooling + adult_mort + infantdeaths + status * percent_exp, data = no_influ_le)
+no_influ_model_7 = lm(bc_le ~ status + percent_exp + HDI + adult_mort + infantdeaths + schooling, data = no_influ_le)
 summary(no_influ_model_7)
 ```
 
@@ -125,10 +119,10 @@ summary(no_influ_model_7)
 ```{r}
 # compare models with and without influential observations
 
-no_influ_model_7 = lm(bc_le ~ status + percent_exp + HDI + schooling + adult_mort + infantdeaths + status * percent_exp, data = no_influ_le)
+no_influ_model_7 = lm(bc_le ~ status + percent_exp + HDI + adult_mort + infantdeaths + schooling, data = no_influ_le)
 summary(no_influ_model_7)
 
-model_7 = lm(bc_le ~ status + percent_exp + HDI + schooling + adult_mort + infantdeaths + status * percent_exp, data = bcle_df)
+model_7 = lm(bc_le ~ status + percent_exp + HDI + adult_mort + infantdeaths + schooling, data = bcle_df)
 summary(model_7)
 
 ```
@@ -153,7 +147,7 @@ set.seed(1)
 train = trainControl(method = "cv", number = 5)
 
 # Fit the 4-variables model
-model = train(bc_le ~ status + percent_exp + HDI + schooling + adult_mort + infantdeaths + status * percent_exp, data = no_influ_le, trControl = train, method = 'lm', na.action = na.pass)
+model = train(bc_le ~ status + percent_exp + HDI + adult_mort + infantdeaths + schooling, data = no_influ_le, trControl = train, method = 'lm', na.action = na.pass)
 
 model$finalModel
 print(model)

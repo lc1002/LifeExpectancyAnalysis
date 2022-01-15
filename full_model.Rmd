@@ -1,5 +1,5 @@
 ---
-title: "stepwise_model"
+title: "full_model"
 output: html_document
 ---
 
@@ -21,26 +21,17 @@ le_df =
   rename("HDI" = "incomecompositionofresources", "percent_exp" = "percentageexpenditure", "total_exp" = "totalexpenditure", "le" = "lifeexpectancy", "adult_mort" = "adult_mortality", "thin_1_19" = "thinness1_19years", "thin_5_9" = "thinness5_9years", "under_five" = "under_fivedeaths")
 ```
 
-# Correlation Matrix
-```{r}
-le_df =
-  le_df %>%
-  dplyr::select(-c(country,continent,year,status))
-
-corrplot(cor(le_df), type = "upper", diag = FALSE, method = "square", addCoef.col = "black", number.cex = .5, tl.col = "black", tl.cex = .9)
-```
-
-```{r}
-le_df = 
-  read_csv("./data/Complete_Data.CSV") %>% 
-  rename("HDI" = "incomecompositionofresources", "percent_exp" = "percentageexpenditure", "total_exp" = "totalexpenditure", "le" = "lifeexpectancy", "adult_mort" = "adult_mortality", "thin_1_19" = "thinness1_19years", "thin_5_9" = "thinness5_9years", "under_five" = "under_fivedeaths")
-```
-
 
 ## Use diagnostic plots to check model
 
 ```{r}
 full_model = lm(le ~ status + adult_mort + infantdeaths + alcohol + percent_exp + hepatitis_b + measles + bmi + under_five + polio + total_exp + diphtheria + hiv_aids + gdp + population + thin_1_19 + thin_5_9 + HDI + schooling, data = le_df)
+summary(full_model)
+check_collinearity(full_model)
+
+## remove high correlation and insignificant variables
+full_model = lm(le ~ status + adult_mort + bmi + polio + diphtheria + hiv_aids + gdp + thin_1_19 + HDI + schooling, data = le_df)
+summary(full_model)
 
 par(mfrow = c(2, 2))
 par(mar = c(2,2,2,2))
@@ -67,10 +58,10 @@ le_df =
   le_df %>% 
   mutate(bc_le = (le)^2)
 
-full_bc = lm(bc_le ~ status + adult_mort + infantdeaths + alcohol + percent_exp + hepatitis_b + measles + bmi + under_five + polio + total_exp + diphtheria + hiv_aids + gdp + population + thin_1_19 + thin_5_9 + HDI + schooling, data = le_df)
+full_bc = lm(bc_le ~ status + adult_mort + bmi + polio + diphtheria + hiv_aids + gdp + thin_1_19 + HDI + schooling, data = le_df)
 summary(full_bc)
 
-full = lm(le ~ status + adult_mort + infantdeaths + alcohol + percent_exp + hepatitis_b + measles + bmi + under_five + polio + total_exp + diphtheria + hiv_aids + gdp + population + thin_1_19 + thin_5_9 + HDI + schooling, data = le_df)
+full = lm(le ~ status + adult_mort + bmi + polio + diphtheria + hiv_aids + gdp + thin_1_19 + HDI + schooling, data = le_df)
 summary(full)
 
 par(mfrow = c(2, 1))
@@ -108,7 +99,7 @@ influential_obs = as.numeric(names(cook)[(cook > cutoff)])
 #define new data frame with influential points removed
 no_influ_le = le_df[-influential_obs, ]
 
-no_influ_full_bc = lm(bc_le ~ status + adult_mort + infantdeaths + alcohol + percent_exp + hepatitis_b + measles + bmi + under_five + polio + total_exp + diphtheria + hiv_aids + gdp + population + thin_1_19 + thin_5_9 + HDI + schooling, data = no_influ_le)
+no_influ_full_bc = lm(bc_le ~ status + adult_mort + bmi + polio + diphtheria + hiv_aids + gdp + thin_1_19 + HDI + schooling, data = no_influ_le)
 summary(no_influ_full_bc)
 ```
 
@@ -116,27 +107,20 @@ summary(no_influ_full_bc)
 
 ```{r}
 # compare models with and without influential observations
-no_influ_full_bc = lm(bc_le ~ status + adult_mort + infantdeaths + alcohol + percent_exp + hepatitis_b + measles + bmi + under_five + polio + total_exp + diphtheria + hiv_aids + gdp + population + thin_1_19 + thin_5_9 + HDI + schooling, data = no_influ_le)
+no_influ_full_bc = lm(bc_le ~ status + adult_mort + bmi + polio + diphtheria + hiv_aids + gdp + thin_1_19 + HDI + schooling, data = no_influ_le)
 summary(no_influ_full_bc)
 
-full_bc = lm(bc_le ~ status + adult_mort + infantdeaths + alcohol + percent_exp + hepatitis_b + measles + bmi + under_five + polio + total_exp + diphtheria + hiv_aids + gdp + population + thin_1_19 + thin_5_9 + HDI + schooling, data = le_df)
+full_bc = lm(bc_le ~ status + adult_mort + bmi + polio + diphtheria + hiv_aids + gdp + thin_1_19 + HDI + schooling, data = le_df)
 summary(full_bc)
 ```
-
-```{r}
-# remove insignificant variables 
-new_full_bc = lm(bc_le ~ status + adult_mort + infantdeaths + bmi + under_five + polio + total_exp + diphtheria + hiv_aids + gdp + HDI + schooling, data = no_influ_le)
-summary(new_full_bc)
-```
-
 
 ## Multi-collinearity
 
 ```{r}
-check_collinearity(new_full_bc)
+check_collinearity(no_influ_full_bc)
 
-# remove high correlation variables (under_five)
-final_full = lm(bc_le ~ status + adult_mort + infantdeaths + bmi + polio + total_exp + diphtheria + hiv_aids + gdp + HDI + schooling, data = no_influ_le)
+# remove high correlation variables (HDI)
+final_full = lm(bc_le ~ status + adult_mort + bmi + polio + diphtheria + hiv_aids + gdp + thin_1_19 + schooling, data = no_influ_le)
 check_collinearity(final_full)
 summary(final_full)
 ```
@@ -150,7 +134,7 @@ set.seed(1)
 train = trainControl(method = "cv", number = 5)
 
 # Fit the 4-variables model
-model = train(bc_le ~ . -continent - country - year, data = no_influ_le, trControl = train, method = 'lm', na.action = na.pass)
+model = train(bc_le ~ status + adult_mort + bmi + polio + diphtheria + hiv_aids + gdp + thin_1_19 + schooling, data = no_influ_le, trControl = train, method = 'lm', na.action = na.pass)
 
 model$finalModel
 print(model)
