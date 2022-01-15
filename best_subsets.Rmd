@@ -1,5 +1,5 @@
 ---
-title: "stepwise_model"
+title: "best subsets model"
 author: "AnMei Chen"
 date: "1/5/2022"
 output: html_document
@@ -41,9 +41,6 @@ as.data.frame(t(best_summary_df[-1])) %>%
   rename("1" = "V1", "2" = "V2", "3" = "V3","4" = "V4", "5" = "V5", "6" = "V6","7" = "V7", "8" = "V8") %>% 
    knitr::kable()
 
-best_summary_df %>% 
-  knitr::kable()
-
 ```
 
 ## Comparing Criterias of Models in Different Sizes
@@ -66,31 +63,28 @@ Model_comparison =
 	  labs(
 	  	x = "Number of Predictors",
 	  	y = "Values",
-	  	title = "Model Selection Criterias Comparison"
+	  	title = "Model Selection Criteria Comparison"
 	  )
 
 Model_comparison
 ```
 
 
-Based on the , the most appropriate model should include 8 variables: adult_mort, infantdeaths, under_five, polio, hiv_aids, gdp, hdi, schooling.
-
-
 ## Best Subsets model with 8 variables
 
 ```{r}
-best_subsets_mod = lm(le ~ adult_mort + infantdeaths + under_five + polio + hiv_aids +gdp + HDI + schooling, data = le_df)
-summary(best_subsets_mod)
+best_subsets_8 = lm(le ~ adult_mort + infantdeaths + under_five + polio + hiv_aids +gdp + HDI + schooling, data = le_df)
+summary(best_subsets_8)
 
 par(mfrow = c(2, 2))
 par(mar = c(2,2,2,2))
-plot(best_subsets_mod)
+plot(best_subsets_8)
 
-check_collinearity(best_subsets_mod)
+check_collinearity(best_subsets_8)
 
 #remove high correlation variables
-best_subsets = lm(le ~ adult_mort + infantdeaths + polio + hiv_aids +gdp + HDI + schooling, data = le_df)
-summary(best_subsets)
+best_8 = lm(le ~ adult_mort + infantdeaths + polio + hiv_aids +gdp + HDI + schooling, data = le_df)
+summary(best_8)
 
 
 # Model Validation
@@ -106,26 +100,24 @@ print(model)
 
 
 ```{r}
-avPlots(best_subsets)
+avPlots(best_8)
 ```
-
 
 ## Best Subsets model with 7 variables
 
-
 ```{r}
-best_subsets_mod = lm(le ~ adult_mort + infantdeaths + under_five + polio + hiv_aids +gdp + HDI + schooling, data = le_df)
-summary(best_subsets_mod)
+best_subsets_7 = lm(le ~ adult_mort + bmi + polio + hiv_aids + gdp + HDI + schooling, data = le_df)
+summary(best_subsets_7)
 
 par(mfrow = c(2, 2))
 par(mar = c(2,2,2,2))
-plot(best_subsets_mod)
+plot(best_subsets_7)
 
-check_collinearity(best_subsets_mod)
+check_collinearity(best_subsets_7)
 
 #remove high correlation variables
-best_subsets = lm(le ~ adult_mort + infantdeaths + polio + hiv_aids +gdp + HDI + schooling, data = le_df)
-summary(best_subsets)
+best_7 = lm(le ~ adult_mort + bmi + polio + hiv_aids + gdp + HDI + schooling, data = le_df)
+summary(best_7)
 
 
 # Model Validation
@@ -133,13 +125,12 @@ set.seed(1)
 
 train = trainControl(method = "cv", number = 5)
 
-model = train(le ~ adult_mort + infantdeaths + polio + hiv_aids +gdp + HDI + schooling, data = le_df, trControl = train, method = 'lm', na.action = na.pass)
+model = train(le ~ adult_mort + bmi + polio + hiv_aids + gdp + HDI + schooling, data = le_df, trControl = train, method = 'lm', na.action = na.pass)
 
 model$finalModel
 print(model)
 ```
 
-
 ```{r}
-avPlots(best_subsets)
+avPlots(best_7)
 ```
