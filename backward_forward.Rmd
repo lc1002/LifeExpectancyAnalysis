@@ -18,15 +18,14 @@ library(Metrics)
 
 ```{r}
 le_df = 
-  read_csv("./data/Complete_Data.CSV") %>% 
-  rename("HDI" = "incomecompositionofresources", "percent_exp" = "percentageexpenditure", "total_exp" = "totalexpenditure", "le" = "lifeexpectancy", "adult_mort" = "adult_mortality", "thin_1_19" = "thinness1_19years", "thin_5_9" = "thinness5_9years", "under_five" = "under_fivedeaths")
+  read_csv("./data/Dummy_Data.CSV")
 ```
 
 # Backward Elimination
 
 ```{r}
 full_model =
-  lm(le ~ year + status + adult_mort + infantdeaths + alcohol + percent_exp + hepatitis_b + measles + bmi + under_five + polio + total_exp + diphtheria + hiv_aids + gdp + population + thin_1_19 + thin_5_9 + HDI + schooling, data = le_df)
+  lm(le ~ year + status_Developed + adult_mort + infantdeaths + alcohol + percent_exp + hepatitis_b_high + hepatitis_b_low + measles + bmi + under_five + polio_high + polio_low + total_exp + diphtheria_high + diphtheria_low + hiv_aids + gdp + population + thin_1_19 + thin_5_9 + HDI + schooling, data = le_df)
 
 back_mod = stepAIC(full_model, direction = "backward", 
                       trace = FALSE, scope = formula(full_model))
@@ -39,7 +38,7 @@ back_mod$coefficients
 summary(back_mod)
 
 # remove insignificant variables and high correlation variables
-backward = lm(le ~ status + adult_mort + bmi+ polio + diphtheria + hiv_aids + gdp + thin_1_19 + HDI + schooling, data = le_df)
+backward = lm(le ~ status_Developed + adult_mort + bmi + polio_high + diphtheria_low + hiv_aids + gdp + thin_1_19 + HDI + schooling, data = le_df)
 summary(backward)
 check_collinearity(backward)
 ```
@@ -47,7 +46,7 @@ check_collinearity(backward)
 ## Use diagnostic plots to check model
 
 ```{r}
-backward = lm(le ~ status + adult_mort + bmi+ polio + diphtheria + hiv_aids + gdp + thin_1_19 + HDI + schooling, data = le_df)
+backward = lm(le ~ status_Developed + adult_mort + bmi + polio_high + diphtheria_low + hiv_aids + gdp + thin_1_19 + HDI + schooling, data = le_df)
 
 par(mfrow = c(2, 2))
 par(mar = c(2,2,2,2))
@@ -74,9 +73,9 @@ le_df =
   le_df %>% 
   mutate(bc_le = (le)^2)
 
-backward_bc = lm(bc_le ~ status + adult_mort + bmi+ polio + diphtheria + hiv_aids + gdp + thin_1_19 + HDI + schooling, data = le_df)
+backward_bc = lm(bc_le ~ status_Developed + adult_mort + bmi + polio_high + diphtheria_low + hiv_aids + gdp + thin_1_19 + HDI + schooling, data = le_df)
 
-backward = lm(le ~ status + adult_mort + bmi+ polio + diphtheria + hiv_aids + gdp + thin_1_19 + HDI + schooling, data = le_df)
+backward = lm(le ~ status_Developed + adult_mort + bmi + polio_high + diphtheria_low + hiv_aids + gdp + thin_1_19 + HDI + schooling, data = le_df)
 
 par(mfrow = c(2, 1))
 par(mar = c(2,2,2,2))
@@ -100,7 +99,7 @@ par(mar = c(3,3,3,3))
 ## Identify influentical observations
 
 ```{r}
-plot(backward, which = 5)
+plot(backward_bc, which = 5)
 
 # Identify influential observations using Cook's distance
 cutoff <- 4/nrow(le_df)
@@ -113,28 +112,28 @@ influential_obs = as.numeric(names(cook)[(cook > cutoff)])
 #define new data frame with influential points removed
 no_influ_le = le_df[-influential_obs, ]
 
-no_influ_backward = lm(le ~ status + adult_mort + bmi+ polio + diphtheria + hiv_aids + gdp + thin_1_19 + HDI + schooling, data = no_influ_le)
-summary(no_influ_backward)
+no_influ_backward_bc = lm(bc_le ~ status_Developed + adult_mort + bmi + polio_high + diphtheria_low + hiv_aids + gdp + thin_1_19 + HDI + schooling, data = no_influ_le)
+summary(no_influ_backward_bc)
 ```
 
 ## Leverage checking 
 
 ```{r}
 # compare models with and without influential observations
-no_influ_backward = lm(le ~ status + adult_mort + bmi+ polio + diphtheria + hiv_aids + gdp + thin_1_19 + HDI + schooling, data = no_influ_le)
-summary(no_influ_backward)
+no_influ_backward_bc = lm(bc_le ~ status_Developed + adult_mort + bmi + polio_high + diphtheria_low + hiv_aids + gdp + thin_1_19 + HDI + schooling, data = no_influ_le)
+summary(no_influ_backward_bc)
 
-backward = lm(le ~ status + adult_mort + bmi+ polio + diphtheria + hiv_aids + gdp + thin_1_19 + HDI + schooling, data = le_df)
-summary(backward)
+backward_bc = lm(bc_le ~ status_Developed + adult_mort + bmi + polio_high + diphtheria_low + hiv_aids + gdp + thin_1_19 + HDI + schooling, data = le_df)
+summary(backward_bc)
 ```
 
 
 ## Multi-collinearity
 
 ```{r}
-check_collinearity(no_influ_backward)
+check_collinearity(no_influ_backward_bc)
 
-final_backward = no_influ_backward
+final_backward = no_influ_backward_bc
 
 ```
 
@@ -147,7 +146,7 @@ set.seed(1)
 train = trainControl(method = "cv", number = 5)
 
 # Fit the 4-variables model
-model = train(le ~ status + adult_mort + bmi+ polio + diphtheria + hiv_aids + gdp + thin_1_19 + HDI + schooling, data = no_influ_le, trControl = train, method = 'lm', na.action = na.pass)
+model = train(le ~ status_Developed + adult_mort + bmi + polio_high + diphtheria_low + hiv_aids + gdp + thin_1_19 + HDI + schooling, data = no_influ_le, trControl = train, method = 'lm', na.action = na.pass)
 
 model$finalModel
 print(model)
@@ -171,7 +170,7 @@ avPlots(final_backward)
 
 ```{r}
 full_model =
-  lm(le ~ year + status + adult_mort + infantdeaths + alcohol + percent_exp + hepatitis_b + measles + bmi + under_five + polio + total_exp + diphtheria + hiv_aids + gdp + population + thin_1_19 + thin_5_9 + HDI + schooling, data = le_df)
+  lm(le ~ year + status_Developed + adult_mort + infantdeaths + alcohol + percent_exp + hepatitis_b_high + hepatitis_b_low + measles + bmi + under_five + polio_high + polio_low + total_exp + diphtheria_high + diphtheria_low + hiv_aids + gdp + population + thin_1_19 + thin_5_9 + HDI + schooling, data = le_df)
 
 forward_mod = stepAIC(full_model, direction = "forward", 
                       trace = FALSE, scope = formula(full_model))
@@ -184,7 +183,7 @@ forward_mod$coefficients
 summary(forward_mod)
 
 # remove insignificant variables and high correlation variables
-forward = lm(le ~ adult_mort + infantdeaths + alcohol + bmi + polio + diphtheria + hiv_aids + gdp + thin_5_9 + HDI + schooling, data = le_df)
+forward = lm(le ~ status_Developed + adult_mort + infantdeaths + bmi + polio_high + diphtheria_low + hiv_aids + gdp + HDI + schooling, data = le_df)
 summary(forward)
 check_collinearity(forward)
 ```
@@ -192,7 +191,7 @@ check_collinearity(forward)
 ## Use diagnostic plots to check model
 
 ```{r}
-forward = lm(le ~ adult_mort + infantdeaths + alcohol + bmi + polio + diphtheria + hiv_aids + gdp + thin_5_9 + HDI + schooling, data = le_df)
+forward = lm(le ~ status_Developed + adult_mort + infantdeaths + bmi + polio_high + diphtheria_low + hiv_aids + gdp + HDI + schooling, data = le_df)
 
 par(mfrow = c(2, 2))
 par(mar = c(2,2,2,2))
@@ -217,12 +216,12 @@ lambda
 
 le_df =
   le_df %>% 
-  mutate(bc_le = (le)^1.5)
+  mutate(bc_le = (le)^2)
 
-forward_bc = lm(bc_le ~ adult_mort + infantdeaths + alcohol + bmi + polio + diphtheria + hiv_aids + gdp + thin_5_9 + HDI + schooling, data = le_df)
+forward_bc = lm(bc_le ~ status_Developed + adult_mort + infantdeaths + bmi + polio_high + diphtheria_low + hiv_aids + gdp + HDI + schooling, data = le_df)
 summary(forward_bc)
 
-forward = lm(le ~ adult_mort + infantdeaths + alcohol + bmi + polio + diphtheria + hiv_aids + gdp + thin_5_9 + HDI + schooling, data = le_df)
+forward = lm(le ~ status_Developed + adult_mort + infantdeaths + bmi + polio_high + diphtheria_low + hiv_aids + gdp + HDI + schooling, data = le_df)
 
 par(mfrow = c(2, 1))
 par(mar = c(2,2,2,2))
@@ -246,32 +245,32 @@ par(mar = c(3,3,3,3))
 ## Identify influentical observations
 
 ```{r}
-plot(forward, which = 5)
+plot(forward_bc, which = 5)
 
 # Identify influential observations using Cook's distance
 cutoff <- 4/nrow(le_df)
 plot(forward, which = 4, cook.levels = cutoff)
 abline(h = cutoff, lty = 2, col = "red")
 
-cook = cooks.distance(forward)
+cook = cooks.distance(forward_bc)
 influential_obs = as.numeric(names(cook)[(cook > cutoff)])
 
 #define new data frame with influential points removed
 no_influ_le = le_df[-influential_obs, ]
 
-no_influ_forward = lm(le ~ adult_mort + infantdeaths + alcohol + bmi + polio + diphtheria + hiv_aids + gdp + thin_5_9 + HDI + schooling, data = no_influ_le)
-summary(no_influ_forward)
+no_influ_forward_bc = lm(bc_le ~ status_Developed + adult_mort + infantdeaths + bmi + polio_high + diphtheria_low + hiv_aids + gdp + HDI + schooling, data = no_influ_le)
+summary(no_influ_forward_bc)
 ```
 
 ## Leverage checking 
 
 ```{r}
 # compare models with and without influential observations
-no_influ_forward = lm(le ~ adult_mort + infantdeaths + alcohol + bmi + polio + diphtheria + hiv_aids + gdp + thin_5_9 + HDI + schooling, data = no_influ_le)
-summary(no_influ_forward)
+no_influ_forward_bc = lm(bc_le ~ status_Developed + adult_mort + infantdeaths + bmi + polio_high + diphtheria_low + hiv_aids + gdp + HDI + schooling, data = no_influ_le)
+summary(no_influ_forward_bc)
 
-forward = lm(le ~ adult_mort + infantdeaths + alcohol + bmi + polio + diphtheria + hiv_aids + gdp + thin_5_9 + HDI + schooling, data = le_df)
-summary(forward)
+forward_bc = lm(bc_le ~ status_Developed + adult_mort + infantdeaths + bmi + polio_high + diphtheria_low + hiv_aids + gdp + HDI + schooling, data = le_df)
+summary(forward_bc)
 
 ```
 
@@ -279,14 +278,13 @@ summary(forward)
 ## Multi-collinearity
 
 ```{r}
-check_collinearity(no_influ_forward)
-
+check_collinearity(no_influ_forward_bc)
 ```
 
 ## remove insignificant variables
 
 ```{r}
-final_forward = lm(le ~ adult_mort + bmi + polio + diphtheria + hiv_aids + gdp + thin_5_9 + HDI + schooling, data = no_influ_le)
+final_forward = lm(le ~ status_Developed + adult_mort + bmi + polio_high + diphtheria_low + hiv_aids + gdp + HDI + schooling, data = no_influ_le)
 summary(final_forward)
 ```
 
@@ -299,7 +297,7 @@ set.seed(1)
 train = trainControl(method = "cv", number = 5)
 
 # Fit the 4-variables model
-model = train(le ~ adult_mort + bmi + polio + diphtheria + hiv_aids + gdp + thin_5_9 + HDI + schooling, data = no_influ_le, trControl = train, method = 'lm', na.action = na.pass)
+model = train(le ~ status_Developed + adult_mort + infantdeaths + bmi + polio_high + diphtheria_low + hiv_aids + gdp + HDI + schooling, data = no_influ_le, trControl = train, method = 'lm', na.action = na.pass)
 
 model$finalModel
 print(model)

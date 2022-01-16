@@ -14,17 +14,14 @@ library(Metrics)
 
 ```{r}
 le_df = 
-  read_csv("./data/Complete_Data.CSV") %>%
-  mutate(status = ifelse(status == "Developing", "0", "1"),
-         status = factor(status, levels = c("0", "1"))) %>% 
-  rename("HDI" = "incomecompositionofresources", "percent_exp" = "percentageexpenditure", "total_exp" = "totalexpenditure", "le" = "lifeexpectancy", "adult_mort" = "adult_mortality", "thin_1_19" = "thinness1_19years", "thin_5_9" = "thinness5_9years", "under_five" = "under_fivedeaths") 
+  read_csv("./data/Dummy_Data.CSV")
 ```
 
 ## model 7
 
 ```{r}
 model_7 =
-  lm(le ~ status + percent_exp + HDI + adult_mort + infantdeaths + schooling, data = le_df)
+  lm(le ~ status_Developed + percent_exp + HDI + adult_mort + infantdeaths + schooling, data = le_df)
 
 summary(model_7)
 
@@ -59,18 +56,10 @@ bcle_df =
   le_df %>% 
   mutate(bc_le = (le)^2)
 
-bcle_df %>% 
-  ggplot(aes(x = le)) +
-  geom_density()
-
-bcle_df %>% 
-  ggplot(aes(x = bc_le)) +
-  geom_density()
-
-model_7_bc = lm(bc_le ~ status + percent_exp + HDI + adult_mort + infantdeaths + schooling, data = bcle_df)
+model_7_bc = lm(bc_le ~ status_Developed + percent_exp + HDI + adult_mort + infantdeaths + schooling, data = bcle_df)
 summary(model_7_bc)
 
-model_7 = lm(le ~ status + percent_exp + HDI + adult_mort + infantdeaths + schooling, data = le_df)
+model_7 = lm(le ~ status_Developed + percent_exp + HDI + adult_mort + infantdeaths + schooling, data = le_df)
 summary(model_7)
 
 # compare diagnostic plots
@@ -110,7 +99,7 @@ influential_obs = as.numeric(names(cook)[(cook > cutoff)])
 #define new data frame with influential points removed
 no_influ_le = bcle_df[-influential_obs, ]
 
-no_influ_model_7 = lm(bc_le ~ status + percent_exp + HDI + adult_mort + infantdeaths + schooling, data = no_influ_le)
+no_influ_model_7 = lm(bc_le ~ status_Developed + percent_exp + HDI + adult_mort + infantdeaths + schooling, data = no_influ_le)
 summary(no_influ_model_7)
 ```
 
@@ -119,10 +108,10 @@ summary(no_influ_model_7)
 ```{r}
 # compare models with and without influential observations
 
-no_influ_model_7 = lm(bc_le ~ status + percent_exp + HDI + adult_mort + infantdeaths + schooling, data = no_influ_le)
+no_influ_model_7 = lm(bc_le ~ status_Developed + percent_exp + HDI + adult_mort + infantdeaths + schooling, data = no_influ_le)
 summary(no_influ_model_7)
 
-model_7 = lm(bc_le ~ status + percent_exp + HDI + adult_mort + infantdeaths + schooling, data = bcle_df)
+model_7 = lm(bc_le ~ status_Developed + percent_exp + HDI + adult_mort + infantdeaths + schooling, data = bcle_df)
 summary(model_7)
 
 ```
@@ -147,7 +136,7 @@ set.seed(1)
 train = trainControl(method = "cv", number = 5)
 
 # Fit the 4-variables model
-model = train(bc_le ~ status + percent_exp + HDI + adult_mort + infantdeaths + schooling, data = no_influ_le, trControl = train, method = 'lm', na.action = na.pass)
+model = train(bc_le ~ status_Developed + percent_exp + HDI + adult_mort + infantdeaths + schooling, data = no_influ_le, trControl = train, method = 'lm', na.action = na.pass)
 
 model$finalModel
 print(model)
