@@ -36,9 +36,9 @@ best_summary_df =
   remove_rownames() %>% 
   add_column(" " = c(1:8), .before = "year")
 
-as.data.frame(t(best_summary_df[-1])) %>% 
+table = as.data.frame(t(best_summary_df[-1])) %>% 
   rename("1" = "V1", "2" = "V2", "3" = "V3","4" = "V4", "5" = "V5", "6" = "V6","7" = "V7", "8" = "V8") %>% 
-   knitr::kable()
+  knitr::kable()
 
 best_summary$which[8,]
 ```

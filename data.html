@@ -181,67 +181,13 @@ pre code {
 ## x dplyr::filter() masks stats::filter()
 ## x dplyr::lag()    masks stats::lag()</code></pre>
 <pre class="r"><code>library(fastDummies)</code></pre>
-<pre class="r"><code>old_le_df =
-  read_csv(&quot;./data/Complete_Data.CSV&quot;) %&gt;% 
-  rename(&quot;HDI&quot; = &quot;incomecompositionofresources&quot;, &quot;percent_exp&quot; = &quot;percentageexpenditure&quot;, &quot;total_exp&quot; = &quot;totalexpenditure&quot;, &quot;le&quot; = &quot;lifeexpectancy&quot;, &quot;adult_mort&quot; = &quot;adult_mortality&quot;, &quot;thin_1_19&quot; = &quot;thinness1_19years&quot;, &quot;thin_5_9&quot; = &quot;thinness5_9years&quot;, &quot;under_five&quot; = &quot;under_fivedeaths&quot;)</code></pre>
-<pre><code>## Rows: 2938 Columns: 23</code></pre>
-<pre><code>## ── Column specification ────────────────────────────────────────────────────────
-## Delimiter: &quot;,&quot;
-## chr  (3): country, continent, status
-## dbl (20): year, lifeexpectancy, adult_mortality, infantdeaths, alcohol, perc...</code></pre>
-<pre><code>## 
-## ℹ Use `spec()` to retrieve the full column specification for this data.
-## ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.</code></pre>
-<pre class="r"><code>summary(old_le_df)</code></pre>
-<pre><code>##    country           continent              year         status         
-##  Length:2938        Length:2938        Min.   :2000   Length:2938       
-##  Class :character   Class :character   1st Qu.:2004   Class :character  
-##  Mode  :character   Mode  :character   Median :2008   Mode  :character  
-##                                        Mean   :2008                     
-##                                        3rd Qu.:2012                     
-##                                        Max.   :2015                     
-##        le          adult_mort     infantdeaths       alcohol      
-##  Min.   :36.30   Min.   :  1.0   Min.   :   0.0   Min.   : 0.010  
-##  1st Qu.:63.20   1st Qu.: 74.0   1st Qu.:   0.0   1st Qu.: 0.850  
-##  Median :72.10   Median :144.0   Median :   3.0   Median : 3.765  
-##  Mean   :69.24   Mean   :164.6   Mean   :  30.3   Mean   : 4.598  
-##  3rd Qu.:75.70   3rd Qu.:227.0   3rd Qu.:  22.0   3rd Qu.: 7.747  
-##  Max.   :89.00   Max.   :723.0   Max.   :1800.0   Max.   :17.870  
-##   percent_exp         hepatitis_b       measles              bmi       
-##  Min.   :    0.000   Min.   : 1.00   Min.   :     0.0   Min.   : 1.00  
-##  1st Qu.:    4.685   1st Qu.:71.00   1st Qu.:     0.0   1st Qu.:19.20  
-##  Median :   64.913   Median :91.00   Median :    17.0   Median :43.00  
-##  Mean   :  738.251   Mean   :77.93   Mean   :  2419.6   Mean   :38.13  
-##  3rd Qu.:  441.534   3rd Qu.:96.00   3rd Qu.:   360.2   3rd Qu.:56.10  
-##  Max.   :19479.912   Max.   :99.00   Max.   :212183.0   Max.   :87.30  
-##    under_five          polio         total_exp        diphtheria   
-##  Min.   :   0.00   Min.   : 3.00   Min.   : 0.370   Min.   : 2.00  
-##  1st Qu.:   0.00   1st Qu.:78.00   1st Qu.: 4.250   1st Qu.:78.00  
-##  Median :   4.00   Median :93.00   Median : 5.720   Median :93.00  
-##  Mean   :  42.04   Mean   :82.41   Mean   : 5.928   Mean   :82.15  
-##  3rd Qu.:  28.00   3rd Qu.:97.00   3rd Qu.: 7.470   3rd Qu.:97.00  
-##  Max.   :2500.00   Max.   :99.00   Max.   :17.600   Max.   :99.00  
-##     hiv_aids           gdp              population          thin_1_19     
-##  Min.   : 0.100   Min.   :     1.68   Min.   :3.400e+01   Min.   : 0.100  
-##  1st Qu.: 0.100   1st Qu.:   487.93   1st Qu.:1.788e+05   1st Qu.: 1.600  
-##  Median : 0.100   Median :  1764.39   Median :1.323e+06   Median : 3.400  
-##  Mean   : 1.742   Mean   :  6939.60   Mean   :1.216e+07   Mean   : 4.886  
-##  3rd Qu.: 0.800   3rd Qu.:  5814.86   3rd Qu.:7.490e+06   3rd Qu.: 7.200  
-##  Max.   :50.600   Max.   :119172.74   Max.   :1.294e+09   Max.   :27.700  
-##     thin_5_9           HDI           schooling    
-##  Min.   : 0.100   Min.   :0.0000   Min.   : 0.00  
-##  1st Qu.: 1.600   1st Qu.:0.4880   1st Qu.:10.00  
-##  Median : 3.400   Median :0.6770   Median :12.30  
-##  Mean   : 4.908   Mean   :0.6214   Mean   :11.87  
-##  3rd Qu.: 7.300   3rd Qu.:0.7810   3rd Qu.:14.30  
-##  Max.   :28.600   Max.   :0.9480   Max.   :20.70</code></pre>
 <pre class="r"><code>new_le_df =
   read_csv(&quot;./data/Complete_Data.CSV&quot;) %&gt;% 
   rename(&quot;HDI&quot; = &quot;incomecompositionofresources&quot;, &quot;percent_exp&quot; = &quot;percentageexpenditure&quot;, &quot;total_exp&quot; = &quot;totalexpenditure&quot;, &quot;le&quot; = &quot;lifeexpectancy&quot;, &quot;adult_mort&quot; = &quot;adult_mortality&quot;, &quot;thin_1_19&quot; = &quot;thinness1_19years&quot;, &quot;thin_5_9&quot; = &quot;thinness5_9years&quot;, &quot;under_five&quot; = &quot;under_fivedeaths&quot;) %&gt;% 
   mutate(
     polio = ifelse(polio &lt; 78, &quot;low&quot;, ifelse(polio &gt; 78 &amp; polio &lt; 82.41, &quot;median&quot;, &quot;high&quot;)),
-    hepatitis_b = ifelse(hepatitis_b &lt; 71, &quot;low&quot;, ifelse( hepatitis_b &gt; 71 &amp; hepatitis_b &lt; 77.93, &quot;median&quot;, &quot;high&quot;)),
-    diphtheria = ifelse(diphtheria &lt; 78, &quot;low&quot;, ifelse( diphtheria &gt; 78 &amp; diphtheria &lt; 82.15, &quot;median&quot;, &quot;high&quot;))
+    hepatitis_b = ifelse(hepatitis_b &lt; 71, &quot;low&quot;, ifelse(hepatitis_b &gt; 71 &amp; hepatitis_b &lt; 77.93, &quot;median&quot;, &quot;high&quot;)),
+    diphtheria = ifelse(diphtheria &lt; 78, &quot;low&quot;, ifelse(diphtheria &gt; 78 &amp; diphtheria &lt; 82.15, &quot;median&quot;, &quot;high&quot;))
   )</code></pre>
 <pre><code>## Rows: 2938 Columns: 23</code></pre>
 <pre><code>## ── Column specification ────────────────────────────────────────────────────────
