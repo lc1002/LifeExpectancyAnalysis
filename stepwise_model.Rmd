@@ -18,37 +18,38 @@ library(Metrics)
 
 ```{r}
 le_df = 
-  read_csv("./data/Complete_Data.CSV") %>% 
-  rename("HDI" = "incomecompositionofresources", "percent_exp" = "percentageexpenditure", "total_exp" = "totalexpenditure", "le" = "lifeexpectancy", "adult_mort" = "adult_mortality", "thin_1_19" = "thinness1_19years", "thin_5_9" = "thinness5_9years", "under_five" = "under_fivedeaths")
+  read_csv("./data/Dummy_Data.CSV")
 ```
 
 # Correlation Matrix
 ```{r}
-le_df =
+cm_df =
   le_df %>%
-  dplyr::select(-c(country,continent,year,status))
+  dplyr::select(-c(country,continent))
 
-corrplot(cor(le_df), type = "upper", diag = FALSE, method = "square", addCoef.col = "black", number.cex = .5, tl.col = "black", tl.cex = .9)
+corrplot(cor(cm_df), type = "upper", diag = FALSE, method = "square", addCoef.col = "black", number.cex = .5, tl.col = "black", tl.cex = .9)
 ```
 
 ## Stepwise by AIC 
 ```{r}
-le_df = 
-  read_csv("./data/Complete_Data.CSV") %>% 
-  rename("HDI" = "incomecompositionofresources", "percent_exp" = "percentageexpenditure", "total_exp" = "totalexpenditure", "le" = "lifeexpectancy", "adult_mort" = "adult_mortality", "thin_1_19" = "thinness1_19years", "thin_5_9" = "thinness5_9years", "under_five" = "under_fivedeaths")
-
 full_model =
-  lm(le ~ continent + year + status + adult_mort + infantdeaths + alcohol + percent_exp + hepatitis_b + measles + bmi + under_five + polio + total_exp + diphtheria + hiv_aids + gdp + population + thin_1_19 + thin_5_9 + HDI + schooling, data = le_df)
+  lm(le ~ year + status_Developed + adult_mort + infantdeaths + alcohol + percent_exp + hepatitis_b_high + hepatitis_b_low + measles + bmi + under_five + polio_high + polio_low + total_exp + diphtheria_high + diphtheria_low + hiv_aids + gdp + population + thin_1_19 + thin_5_9 + HDI + schooling, data = le_df)
 
 step_model = stepAIC(full_model, direction = "both", 
                       trace = FALSE)
 summary(step_model)
+
+## remove insignificant and high correlation variables
+stepwise = lm(le ~ status_Developed + adult_mort + bmi + polio_high + diphtheria_low + hiv_aids + gdp + thin_1_19 + HDI + schooling, data = le_df)
+summary(stepwise)
+check_collinearity(stepwise)
 ```
 
 ## Use diagnostic plots to check stepwise model
 
 ```{r}
-stepwise = lm(le ~ continent + year + status + adult_mort + infantdeaths + alcohol + percent_exp + bmi + under_five + polio + diphtheria + hiv_aids + gdp + thin_5_9 + HDI + schooling, data = le_df)
+stepwise = lm(le ~ status_Developed + adult_mort + bmi + polio_high + diphtheria_low + hiv_aids + gdp + thin_1_19 + HDI + schooling, data = le_df)
+summary(stepwise)
 
 par(mfrow = c(2, 2))
 par(mar = c(2,2,2,2))
@@ -75,10 +76,10 @@ le_df =
   le_df %>% 
   mutate(bc_le = (le)^1.5)
 
-stepwise_bc = lm(bc_le ~ continent + year + status + adult_mort + infantdeaths + alcohol + percent_exp + bmi + under_five + polio + diphtheria + hiv_aids + gdp + thin_5_9 + HDI + schooling, data = le_df)
+stepwise_bc = lm(bc_le ~ status_Developed + adult_mort + bmi + polio_high + diphtheria_low + hiv_aids + gdp + thin_1_19 + HDI + schooling, data = le_df)
 summary(stepwise_bc)
 
-stepwise = lm(le ~ continent + year + status + adult_mort + infantdeaths + alcohol + percent_exp + bmi + under_five + polio + diphtheria + hiv_aids + gdp + thin_5_9 + HDI + schooling, data = le_df)
+stepwise = lm(le ~ status_Developed + adult_mort + bmi + polio_high + diphtheria_low + hiv_aids + gdp + thin_1_19 + HDI + schooling, data = le_df)
 summary(stepwise)
 
 par(mfrow = c(2, 1))
@@ -116,7 +117,7 @@ influential_obs = as.numeric(names(cook)[(cook > cutoff)])
 #define new data frame with influential points removed
 no_influ_le = le_df[-influential_obs, ]
 
-no_influ_stepwise = lm(le ~ continent + year + status + adult_mort + infantdeaths + alcohol + percent_exp + bmi + under_five + polio + diphtheria + hiv_aids + gdp + thin_5_9 + HDI + schooling, data = no_influ_le)
+no_influ_stepwise = lm(le ~ status_Developed + adult_mort + bmi + polio_high + diphtheria_low + hiv_aids + gdp + thin_1_19 + HDI + schooling, data = no_influ_le)
 summary(no_influ_stepwise)
 ```
 
@@ -124,10 +125,10 @@ summary(no_influ_stepwise)
 
 ```{r}
 # compare models with and without influential observations
-no_influ_stepwise = lm(le ~ continent + year + status + adult_mort + infantdeaths + alcohol + percent_exp + bmi + under_five + polio + diphtheria + hiv_aids + gdp + thin_5_9 + HDI + schooling, data = no_influ_le)
+no_influ_stepwise = lm(le ~ status_Developed + adult_mort + bmi + polio_high + diphtheria_low + hiv_aids + gdp + thin_1_19 + HDI + schooling, data = no_influ_le)
 summary(no_influ_stepwise)
 
-stepwise = lm(le ~ continent + year + status + adult_mort + infantdeaths + alcohol + percent_exp + bmi + under_five + polio + diphtheria + hiv_aids + gdp + thin_5_9 + HDI + schooling, data = le_df)
+stepwise = lm(le ~ status_Developed + adult_mort + bmi + polio_high + diphtheria_low + hiv_aids + gdp + thin_1_19 + HDI + schooling, data = le_df)
 summary(stepwise)
 ```
 
@@ -137,18 +138,7 @@ summary(stepwise)
 ```{r}
 check_collinearity(no_influ_stepwise)
 
-#remove high correlation variables
-no_high_stepwise = lm(le ~ year + status + adult_mort + infantdeaths +  percent_exp + bmi + under_five + polio + diphtheria + hiv_aids + gdp + thin_5_9 + HDI, data = no_influ_le)
-check_collinearity(no_high_stepwise)
-summary(no_high_stepwise)
-
-```
-
-```{r}
-# remove insignificant variables
-final_stepwise = lm(le ~ adult_mort + bmi + polio + diphtheria + hiv_aids + thin_5_9 + HDI, data = no_influ_le)
-check_collinearity(final_stepwise)
-summary(final_stepwise)
+final_stepwise = no_influ_stepwise
 ```
 
 ## Model Validation
@@ -160,7 +150,7 @@ set.seed(1)
 train = trainControl(method = "cv", number = 5)
 
 # Fit the 4-variables model
-model = train(le ~ adult_mort + bmi + polio + diphtheria + hiv_aids + thin_5_9 + HDI, data = no_influ_le, trControl = train, method = 'lm', na.action = na.pass)
+model = train(le ~ status_Developed + adult_mort + bmi + polio_high + diphtheria_low + hiv_aids + gdp + thin_1_19 + HDI + schooling, data = no_influ_le, trControl = train, method = 'lm', na.action = na.pass)
 
 model$finalModel
 print(model)

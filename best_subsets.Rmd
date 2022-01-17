@@ -1,0 +1,136 @@
+---
+title: "best subsets model"
+author: "AnMei Chen"
+date: "1/5/2022"
+output: html_document
+---
+
+```{r}
+library(tidyverse)
+library(leaps)
+library(MASS)
+library(performance) # vif
+library(caret)
+library(car)
+library(Metrics)
+library(olsrr)
+```
+
+
+```{r}
+le_df = 
+  read_csv("./data/Dummy_Data.CSV") 
+```
+
+## Best Subsets Regression
+```{r}
+full_model = 
+  lm(le ~ year + status_Developed + adult_mort + infantdeaths + alcohol + percent_exp + hepatitis_b_high + hepatitis_b_low + measles + bmi + under_five + polio_high + polio_low + total_exp + diphtheria_high + diphtheria_low + hiv_aids + gdp + population + thin_1_19 + thin_5_9 + HDI + schooling, data = le_df)
+summary(full_model)
+
+sub_fit = regsubsets(le ~ year + status_Developed + adult_mort + infantdeaths + alcohol + percent_exp + hepatitis_b_high + hepatitis_b_low + measles + bmi + under_five + polio_high + polio_low + total_exp + diphtheria_high + diphtheria_low + hiv_aids + gdp + population + thin_1_19 + thin_5_9 + HDI + schooling, data = le_df)
+
+best_summary = summary(sub_fit)
+best_summary_df = 
+  as.data.frame(best_summary$outmat) %>% 
+  remove_rownames() %>% 
+  add_column(" " = c(1:8), .before = "year")
+
+table = as.data.frame(t(best_summary_df[-1])) %>% 
+  rename("1" = "V1", "2" = "V2", "3" = "V3","4" = "V4", "5" = "V5", "6" = "V6","7" = "V7", "8" = "V8") %>% 
+  knitr::kable()
+
+best_summary$which[8,]
+```
+
+## Comparing Criterias of Models in Different Sizes
+
+```{r}
+Model_comparison =
+  tibble(
+	n_pred = c(1:8),
+	"Adjusted R-square" = best_summary$adjr2,
+	"BIC" = best_summary$bic,
+	"Cp" = best_summary$cp,
+	"Regression Square Error" = best_summary$rsq,
+	"Residual Sum Square" = best_summary$rss
+	) %>%
+	gather(key = "Statistics", value = "value", 2:6) %>%
+	ggplot(aes(x = n_pred, y = value)) +
+	  geom_point() +
+	  geom_line() +
+	  facet_grid(Statistics ~ ., scales = "free_y") +
+	  labs(
+	  	x = "Number of Predictors",
+	  	y = "Values",
+	  	title = "Model Selection Criteria Comparison"
+	  )
+
+Model_comparison
+```
+
+
+## Best Subsets model with 8 variables
+
+```{r}
+best_subsets_8 = lm(le ~ adult_mort + infantdeaths + under_five + polio_high + hiv_aids + gdp + HDI + schooling, data = le_df)
+summary(best_subsets_8)
+
+par(mfrow = c(2, 2))
+par(mar = c(2,2,2,2))
+plot(best_subsets_8)
+
+check_collinearity(best_subsets_8)
+
+#remove high correlation variables
+best_8 = lm(le ~ adult_mort + infantdeaths + polio_high + hiv_aids + gdp + HDI + schooling, data = le_df)
+summary(best_8)
+
+
+# Model Validation
+set.seed(1)
+
+train = trainControl(method = "cv", number = 5)
+
+model = train(le ~ adult_mort + infantdeaths + polio_high + hiv_aids + gdp + HDI + schooling, data = le_df, trControl = train, method = 'lm', na.action = na.pass)
+
+model$finalModel
+print(model)
+```
+
+
+```{r}
+avPlots(best_8)
+```
+
+## Best Subsets model with 7 variables
+
+```{r}
+best_subsets_7 = lm(le ~ adult_mort + bmi + polio_high + hiv_aids + gdp + HDI + schooling, data = le_df)
+summary(best_subsets_7)
+
+par(mfrow = c(2, 2))
+par(mar = c(2,2,2,2))
+plot(best_subsets_7)
+
+check_collinearity(best_subsets_7)
+
+#remove high correlation variables
+best_7 = lm(le ~ adult_mort + bmi + polio_high + hiv_aids + gdp + HDI + schooling, data = le_df)
+summary(best_7)
+
+
+# Model Validation
+set.seed(1)
+
+train = trainControl(method = "cv", number = 5)
+
+model = train(le ~ adult_mort + bmi + polio_high + hiv_aids + gdp + HDI + schooling, data = le_df, trControl = train, method = 'lm', na.action = na.pass)
+
+model$finalModel
+print(model)
+```
+
+```{r}
+avPlots(best_7)
+```

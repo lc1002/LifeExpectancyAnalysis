@@ -1,5 +1,5 @@
 ---
-title: "stepwise_model"
+title: "health_model"
 author: "AnMei Chen"
 date: "1/5/2022"
 output: html_document
@@ -16,26 +16,20 @@ library(Metrics)
 
 ```
 
-
 ```{r}
 le_df = 
-  read_csv("./data/Complete_Data.CSV") %>% 
-  rename("HDI" = "incomecompositionofresources", "percent_exp" = "percentageexpenditure", "total_exp" = "totalexpenditure", "le" = "lifeexpectancy", "adult_mort" = "adult_mortality", "thin_1_19" = "thinness1_19years", "thin_5_9" = "thinness5_9years", "under_five" = "under_fivedeaths")
-```
-
-# Correlation Matrix
-```{r}
-le_df =
-  le_df %>%
-  dplyr::select(-c(country,continent,year,status))
-
-corrplot(cor(le_df), type = "upper", diag = FALSE, method = "square", addCoef.col = "black", number.cex = .5, tl.col = "black", tl.cex = .9)
+  read_csv("./data/Dummy_Data.CSV")
 ```
 
 ## Use diagnostic plots to check model
 
 ```{r}
-health_model = lm(le ~ hepatitis_b + measles + polio + total_exp + diphtheria + hiv_aids + thin_1_19 + thin_5_9, data = le_df)
+health_model = lm(le ~ hepatitis_b_high + hepatitis_b_low + measles + polio_high + polio_low + total_exp + diphtheria_high + diphtheria_low + hiv_aids + thin_1_19 + thin_5_9, data = le_df)
+summary(health_model)
+
+## remove insignificant variables
+health_model = lm(le ~ polio_high + total_exp + diphtheria_low + hiv_aids + thin_1_19, data = le_df)
+check_collinearity(health_model)
 
 par(mfrow = c(2, 2))
 par(mar = c(2,2,2,2))
@@ -62,10 +56,10 @@ le_df =
   le_df %>% 
   mutate(bc_le = (le)^1.5)
 
-health_bc = lm(bc_le ~ hepatitis_b + measles + polio + total_exp + diphtheria + hiv_aids + thin_1_19, data = le_df)
+health_bc = lm(bc_le ~ polio_high + total_exp + diphtheria_low + hiv_aids + thin_1_19, data = le_df)
 summary(health_bc)
 
-health = lm(le ~ hepatitis_b + measles + polio + total_exp + diphtheria + hiv_aids + thin_1_19, data = le_df)
+health = lm(le ~ polio_high + total_exp + diphtheria_low + hiv_aids + thin_1_19, data = le_df)
 summary(health)
 
 par(mfrow = c(2, 1))
@@ -90,49 +84,44 @@ par(mar = c(3,3,3,3))
 ## Identify influentical observations
 
 ```{r}
-plot(health, which = 5)
+plot(health_bc, which = 5)
 
 # Identify influential observations using Cook's distance
 cutoff <- 4/nrow(le_df)
-plot(health, which = 4, cook.levels = cutoff)
+plot(health_bc, which = 4, cook.levels = cutoff)
 abline(h = cutoff, lty = 2, col = "red")
 
-cook = cooks.distance(health)
+cook = cooks.distance(health_bc)
 influential_obs = as.numeric(names(cook)[(cook > cutoff)])
 
 #define new data frame with influential points removed
 no_influ_le = le_df[-influential_obs, ]
 
-no_influ_health = lm(le ~ hepatitis_b + measles + polio + total_exp + diphtheria + hiv_aids + thin_1_19, data = no_influ_le)
-summary(no_influ_health)
+no_influ_health_bc = lm(bc_le ~ polio_high + total_exp + diphtheria_low + hiv_aids + thin_1_19, data = no_influ_le)
+summary(no_influ_health_bc)
 ```
 
 ## Leverage checking 
 
 ```{r}
 # compare models with and without influential observations
-no_influ_health = lm(le ~ hepatitis_b + measles + polio + total_exp + diphtheria + hiv_aids + thin_1_19, data = no_influ_le)
-summary(no_influ_health)
+no_influ_health_bc = lm(bc_le ~ polio_high + total_exp + diphtheria_low + hiv_aids + thin_1_19, data = no_influ_le)
+summary(no_influ_health_bc)
 
-health = lm(le ~ hepatitis_b + measles + polio + total_exp + diphtheria + hiv_aids + thin_1_19, data = le_df)
-summary(health)
+health_bc = lm(bc_le ~ polio_high + total_exp + diphtheria_low + hiv_aids + thin_1_19, data = le_df)
+summary(health_bc)
+
 ```
 
 
 ## Multi-collinearity
 
 ```{r}
-check_collinearity(no_influ_health)
-summary(no_influ_health)
-```
+check_collinearity(no_influ_health_bc)
+summary(no_influ_health_bc)
 
-```{r}
-# remove insignificant variables
-final_health = lm(le ~ polio + total_exp + diphtheria + hiv_aids + thin_1_19, data = no_influ_le)
-check_collinearity(final_health)
-summary(final_health)
+final_health = no_influ_health_bc
 ```
-
 
 ## Model Validation
 
@@ -143,7 +132,7 @@ set.seed(1)
 train = trainControl(method = "cv", number = 5)
 
 # Fit the 4-variables model
-model = train(le ~ polio + total_exp + diphtheria + hiv_aids + thin_1_19, data = no_influ_le, trControl = train, method = 'lm', na.action = na.pass)
+model = train(bc_le ~ polio_high + total_exp + diphtheria_low + hiv_aids + thin_1_19, data = no_influ_le, trControl = train, method = 'lm', na.action = na.pass)
 
 model$finalModel
 print(model)
@@ -152,7 +141,7 @@ print(model)
 ## normalized RMSE
 
 ```{r}
-rmse = model$results$RMSE / (max(no_influ_le$le) - min(no_influ_le$le))
+rmse = model$results$RMSE / (max(no_influ_le$bc_le) - min(no_influ_le$bc_le))
 rmse
 ```
 

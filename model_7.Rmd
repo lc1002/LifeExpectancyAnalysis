@@ -1,0 +1,158 @@
+---
+title: "model_7"
+output: html_document
+---
+
+```{r}
+library(tidyverse)
+library(MASS)
+library(performance) # vif
+library(caret)
+library(car)
+library(Metrics)
+```
+
+```{r}
+le_df = 
+  read_csv("./data/Dummy_Data.CSV")
+```
+
+## model 7
+
+```{r}
+model_7 =
+  lm(le ~ status_Developed + percent_exp + HDI + adult_mort + infantdeaths + schooling, data = le_df)
+
+summary(model_7)
+
+check_collinearity(model_7)
+```
+
+## Use diagnostic plots to check model 3
+
+```{r}
+par(mfrow = c(2, 2))
+par(mar = c(2,2,2,2))
+#Residuals vs Fitted values Plot
+plot(model_7, which = 1)
+# QQ Plot
+plot(model_7, which = 2)
+# Scale-location plot
+plot(model_7, which = 3)
+# Residuals vs. Leverage
+plot(model_7, which = 5)
+par(mfrow = c(1, 1)) 
+par(mar = c(3,3,3,3))
+```
+
+## Box-cox Transformation
+
+```{r}
+bc = boxcox(model_7)
+lambda = bc$x[which.max(bc$y)]
+lambda
+
+bcle_df =
+  le_df %>% 
+  mutate(bc_le = (le)^2)
+
+model_7_bc = lm(bc_le ~ status_Developed + percent_exp + HDI + adult_mort + infantdeaths + schooling, data = bcle_df)
+summary(model_7_bc)
+
+model_7 = lm(le ~ status_Developed + percent_exp + HDI + adult_mort + infantdeaths + schooling, data = le_df)
+summary(model_7)
+
+# compare diagnostic plots
+par(mfrow = c(2, 1))
+par(mar = c(2,2,2,2))
+
+plot(model_7_bc, which = 1)  
+plot(model_7, which = 1)
+
+plot(model_7_bc, which = 2)  
+plot(model_7, which = 2)
+
+plot(model_7_bc, which = 3)  
+plot(model_7, which = 3)
+
+plot(model_7_bc, which = 5)  
+plot(model_7, which = 5)
+
+par(mfrow = c(1, 1)) 
+par(mar = c(3,3,3,3))
+
+```
+
+## Identify influentical observations
+
+```{r}
+plot(model_7, which = 5)
+
+# Identify influential observations using Cook's distance
+cutoff <- 4/nrow(bcle_df)
+plot(model_7, which = 4, cook.levels = cutoff)
+abline(h = cutoff, lty = 2, col = "red")
+
+cook = cooks.distance(model_7)
+influential_obs = as.numeric(names(cook)[(cook > cutoff)])
+
+#define new data frame with influential points removed
+no_influ_le = bcle_df[-influential_obs, ]
+
+no_influ_model_7 = lm(bc_le ~ status_Developed + percent_exp + HDI + adult_mort + infantdeaths + schooling, data = no_influ_le)
+summary(no_influ_model_7)
+```
+
+## Leverage checking 
+
+```{r}
+# compare models with and without influential observations
+
+no_influ_model_7 = lm(bc_le ~ status_Developed + percent_exp + HDI + adult_mort + infantdeaths + schooling, data = no_influ_le)
+summary(no_influ_model_7)
+
+model_7 = lm(bc_le ~ status_Developed + percent_exp + HDI + adult_mort + infantdeaths + schooling, data = bcle_df)
+summary(model_7)
+
+```
+
+## Multi-collinearity
+
+```{r}
+check_collinearity(no_influ_model_7)
+```
+
+```{r}
+mod_7 = no_influ_model_7
+```
+
+
+## Model Validation
+
+```{r}
+set.seed(1)
+
+# Use 5-fold validation and create the training sets
+train = trainControl(method = "cv", number = 5)
+
+# Fit the 4-variables model
+model = train(bc_le ~ status_Developed + percent_exp + HDI + adult_mort + infantdeaths + schooling, data = no_influ_le, trControl = train, method = 'lm', na.action = na.pass)
+
+model$finalModel
+print(model)
+```
+
+## normalized RMSE
+
+```{r}
+rmse = model$results$RMSE / (max(no_influ_le$bc_le) - min(no_influ_le$bc_le))
+rmse
+```
+
+
+## Added variable plot
+
+```{r}
+avPlots(mod_7)
+```
+

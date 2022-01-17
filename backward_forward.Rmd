@@ -1,0 +1,317 @@
+---
+title: "backward forward model"
+author: "AnMei Chen"
+date: "1/5/2022"
+output: html_document
+---
+
+```{r}
+library(tidyverse)
+library(MASS)
+library(corrplot)
+library(performance) # vif
+library(caret)
+library(car)
+library(Metrics)
+```
+
+
+```{r}
+le_df = 
+  read_csv("./data/Dummy_Data.CSV")
+```
+
+# Backward Elimination
+
+```{r}
+full_model =
+  lm(le ~ year + status_Developed + adult_mort + infantdeaths + alcohol + percent_exp + hepatitis_b_high + hepatitis_b_low + measles + bmi + under_five + polio_high + polio_low + total_exp + diphtheria_high + diphtheria_low + hiv_aids + gdp + population + thin_1_19 + thin_5_9 + HDI + schooling, data = le_df)
+
+back_mod = stepAIC(full_model, direction = "backward", 
+                      trace = FALSE, scope = formula(full_model))
+
+#view results of backward stepwise regression
+back_mod$anova
+#view final model
+back_mod$coefficients
+
+summary(back_mod)
+
+# remove insignificant variables and high correlation variables
+backward = lm(le ~ status_Developed + adult_mort + bmi + polio_high + diphtheria_low + hiv_aids + gdp + thin_1_19 + HDI + schooling, data = le_df)
+summary(backward)
+check_collinearity(backward)
+```
+
+## Use diagnostic plots to check model
+
+```{r}
+backward = lm(le ~ status_Developed + adult_mort + bmi + polio_high + diphtheria_low + hiv_aids + gdp + thin_1_19 + HDI + schooling, data = le_df)
+
+par(mfrow = c(2, 2))
+par(mar = c(2,2,2,2))
+#Residuals vs Fitted values Plot
+plot(backward, which = 1)
+# QQ Plot
+plot(backward, which = 2)
+# Scale-location plot
+plot(backward, which = 3)
+# Residuals vs. Leverage
+plot(backward, which = 5)
+par(mfrow = c(1, 1)) 
+par(mar = c(3,3,3,3))
+
+```
+
+## Box-cox Transformation
+```{r}
+bc = boxcox(backward)
+lambda = bc$x[which.max(bc$y)]
+lambda
+
+le_df =
+  le_df %>% 
+  mutate(bc_le = (le)^2)
+
+backward_bc = lm(bc_le ~ status_Developed + adult_mort + bmi + polio_high + diphtheria_low + hiv_aids + gdp + thin_1_19 + HDI + schooling, data = le_df)
+
+backward = lm(le ~ status_Developed + adult_mort + bmi + polio_high + diphtheria_low + hiv_aids + gdp + thin_1_19 + HDI + schooling, data = le_df)
+
+par(mfrow = c(2, 1))
+par(mar = c(2,2,2,2))
+
+plot(backward_bc, which = 1)  
+plot(backward, which = 1)
+
+plot(backward_bc, which = 2)  
+plot(backward, which = 2)
+
+plot(backward_bc, which = 3)  
+plot(backward, which = 3)
+
+plot(backward_bc, which = 5)  
+plot(backward, which = 5)
+
+par(mfrow = c(1, 1)) 
+par(mar = c(3,3,3,3))
+```
+
+## Identify influentical observations
+
+```{r}
+plot(backward_bc, which = 5)
+
+# Identify influential observations using Cook's distance
+cutoff <- 4/nrow(le_df)
+plot(backward, which = 4, cook.levels = cutoff)
+abline(h = cutoff, lty = 2, col = "red")
+
+cook = cooks.distance(backward)
+influential_obs = as.numeric(names(cook)[(cook > cutoff)])
+
+#define new data frame with influential points removed
+no_influ_le = le_df[-influential_obs, ]
+
+no_influ_backward_bc = lm(bc_le ~ status_Developed + adult_mort + bmi + polio_high + diphtheria_low + hiv_aids + gdp + thin_1_19 + HDI + schooling, data = no_influ_le)
+summary(no_influ_backward_bc)
+```
+
+## Leverage checking 
+
+```{r}
+# compare models with and without influential observations
+no_influ_backward_bc = lm(bc_le ~ status_Developed + adult_mort + bmi + polio_high + diphtheria_low + hiv_aids + gdp + thin_1_19 + HDI + schooling, data = no_influ_le)
+summary(no_influ_backward_bc)
+
+backward_bc = lm(bc_le ~ status_Developed + adult_mort + bmi + polio_high + diphtheria_low + hiv_aids + gdp + thin_1_19 + HDI + schooling, data = le_df)
+summary(backward_bc)
+```
+
+
+## Multi-collinearity
+
+```{r}
+check_collinearity(no_influ_backward_bc)
+
+final_backward = no_influ_backward_bc
+
+```
+
+## Model Validation
+
+```{r}
+set.seed(1)
+
+# Use 5-fold validation and create the training sets
+train = trainControl(method = "cv", number = 5)
+
+# Fit the 4-variables model
+model = train(le ~ status_Developed + adult_mort + bmi + polio_high + diphtheria_low + hiv_aids + gdp + thin_1_19 + HDI + schooling, data = no_influ_le, trControl = train, method = 'lm', na.action = na.pass)
+
+model$finalModel
+print(model)
+```
+
+## normalized RMSE
+
+```{r}
+rmse = model$results$RMSE / (max(no_influ_le$bc_le) - min(no_influ_le$bc_le))
+rmse
+```
+
+## Added variable plot
+
+```{r}
+avPlots(final_backward)
+```
+
+
+# forward Elimination
+
+```{r}
+full_model =
+  lm(le ~ year + status_Developed + adult_mort + infantdeaths + alcohol + percent_exp + hepatitis_b_high + hepatitis_b_low + measles + bmi + under_five + polio_high + polio_low + total_exp + diphtheria_high + diphtheria_low + hiv_aids + gdp + population + thin_1_19 + thin_5_9 + HDI + schooling, data = le_df)
+
+forward_mod = stepAIC(full_model, direction = "forward", 
+                      trace = FALSE, scope = formula(full_model))
+
+#view results of backward stepwise regression
+forward_mod$anova
+#view final model
+forward_mod$coefficients
+
+summary(forward_mod)
+
+# remove insignificant variables and high correlation variables
+forward = lm(le ~ status_Developed + adult_mort + infantdeaths + bmi + polio_high + diphtheria_low + hiv_aids + gdp + HDI + schooling, data = le_df)
+summary(forward)
+check_collinearity(forward)
+```
+
+## Use diagnostic plots to check model
+
+```{r}
+forward = lm(le ~ status_Developed + adult_mort + infantdeaths + bmi + polio_high + diphtheria_low + hiv_aids + gdp + HDI + schooling, data = le_df)
+
+par(mfrow = c(2, 2))
+par(mar = c(2,2,2,2))
+#Residuals vs Fitted values Plot
+plot(forward, which = 1)
+# QQ Plot
+plot(forward, which = 2)
+# Scale-location plot
+plot(forward, which = 3)
+# Residuals vs. Leverage
+plot(forward, which = 5)
+par(mfrow = c(1, 1)) 
+par(mar = c(3,3,3,3))
+
+```
+
+## Box-cox Transformation
+```{r}
+bc = boxcox(forward)
+lambda = bc$x[which.max(bc$y)]
+lambda
+
+le_df =
+  le_df %>% 
+  mutate(bc_le = (le)^2)
+
+forward_bc = lm(bc_le ~ status_Developed + adult_mort + infantdeaths + bmi + polio_high + diphtheria_low + hiv_aids + gdp + HDI + schooling, data = le_df)
+summary(forward_bc)
+
+forward = lm(le ~ status_Developed + adult_mort + infantdeaths + bmi + polio_high + diphtheria_low + hiv_aids + gdp + HDI + schooling, data = le_df)
+
+par(mfrow = c(2, 1))
+par(mar = c(2,2,2,2))
+
+plot(forward_bc, which = 1)  
+plot(forward, which = 1)
+
+plot(forward_bc, which = 2)  
+plot(forward, which = 2)
+
+plot(forward_bc, which = 3)  
+plot(forward, which = 3)
+
+plot(forward_bc, which = 5)  
+plot(forward, which = 5)
+
+par(mfrow = c(1, 1)) 
+par(mar = c(3,3,3,3))
+```
+
+## Identify influentical observations
+
+```{r}
+plot(forward_bc, which = 5)
+
+# Identify influential observations using Cook's distance
+cutoff <- 4/nrow(le_df)
+plot(forward, which = 4, cook.levels = cutoff)
+abline(h = cutoff, lty = 2, col = "red")
+
+cook = cooks.distance(forward_bc)
+influential_obs = as.numeric(names(cook)[(cook > cutoff)])
+
+#define new data frame with influential points removed
+no_influ_le = le_df[-influential_obs, ]
+
+no_influ_forward_bc = lm(bc_le ~ status_Developed + adult_mort + infantdeaths + bmi + polio_high + diphtheria_low + hiv_aids + gdp + HDI + schooling, data = no_influ_le)
+summary(no_influ_forward_bc)
+```
+
+## Leverage checking 
+
+```{r}
+# compare models with and without influential observations
+no_influ_forward_bc = lm(bc_le ~ status_Developed + adult_mort + infantdeaths + bmi + polio_high + diphtheria_low + hiv_aids + gdp + HDI + schooling, data = no_influ_le)
+summary(no_influ_forward_bc)
+
+forward_bc = lm(bc_le ~ status_Developed + adult_mort + infantdeaths + bmi + polio_high + diphtheria_low + hiv_aids + gdp + HDI + schooling, data = le_df)
+summary(forward_bc)
+
+```
+
+
+## Multi-collinearity
+
+```{r}
+check_collinearity(no_influ_forward_bc)
+```
+
+## remove insignificant variables
+
+```{r}
+final_forward = lm(le ~ status_Developed + adult_mort + bmi + polio_high + diphtheria_low + hiv_aids + gdp + HDI + schooling, data = no_influ_le)
+summary(final_forward)
+```
+
+## Model Validation
+
+```{r}
+set.seed(1)
+
+# Use 5-fold validation and create the training sets
+train = trainControl(method = "cv", number = 5)
+
+# Fit the 4-variables model
+model = train(le ~ status_Developed + adult_mort + infantdeaths + bmi + polio_high + diphtheria_low + hiv_aids + gdp + HDI + schooling, data = no_influ_le, trControl = train, method = 'lm', na.action = na.pass)
+
+model$finalModel
+print(model)
+```
+
+## normalized RMSE
+
+```{r}
+rmse = model$results$RMSE / (max(no_influ_le$bc_le) - min(no_influ_le$bc_le))
+rmse
+```
+
+## Added variable plot
+
+```{r}
+avPlots(final_forward)
+```
