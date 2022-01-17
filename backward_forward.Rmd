@@ -1,7 +1,5 @@
 ---
 title: "backward forward model"
-author: "AnMei Chen"
-date: "1/5/2022"
 output: html_document
 ---
 
@@ -25,7 +23,7 @@ le_df =
 
 ```{r}
 full_model =
-  lm(le ~ year + status_Developed + adult_mort + infantdeaths + alcohol + percent_exp + hepatitis_b_high + hepatitis_b_low + measles + bmi + under_five + polio_high + polio_low + total_exp + diphtheria_high + diphtheria_low + hiv_aids + gdp + population + thin_1_19 + thin_5_9 + HDI + schooling, data = le_df)
+  lm(le ~ status_Developed + adult_mort + infantdeaths + alcohol + percent_exp + hepatitis_b_high + hepatitis_b_low + measles + bmi + under_five + polio_high + polio_low + total_exp + diphtheria_high + diphtheria_low + hiv_aids + gdp + population + thin_1_19 + thin_5_9 + HDI + schooling, data = le_df)
 
 back_mod = stepAIC(full_model, direction = "backward", 
                       trace = FALSE, scope = formula(full_model))
