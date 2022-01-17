@@ -25,7 +25,7 @@ le_df =
 
 ```{r}
 full_model =
-  lm(le ~ year + status_Developed + adult_mort + infantdeaths + alcohol + percent_exp + hepatitis_b_high + hepatitis_b_low + measles + bmi + under_five + polio_high + polio_low + total_exp + diphtheria_high + diphtheria_low + hiv_aids + gdp + population + thin_1_19 + thin_5_9 + HDI + schooling, data = le_df)
+  lm(le ~ status_Developed + adult_mort + infantdeaths + alcohol + percent_exp + hepatitis_b_high + measles + bmi + under_five + polio_high + total_exp + diphtheria_high + hiv_aids + gdp + population + thin_1_19 + thin_5_9 + HDI + schooling, data = le_df)
 
 back_mod = stepAIC(full_model, direction = "backward", 
                       trace = FALSE, scope = formula(full_model))
@@ -38,7 +38,7 @@ back_mod$coefficients
 summary(back_mod)
 
 # remove insignificant variables and high correlation variables
-backward = lm(le ~ status_Developed + adult_mort + bmi + polio_high + diphtheria_low + hiv_aids + gdp + thin_1_19 + HDI + schooling, data = le_df)
+backward = lm(le ~ status_Developed + adult_mort + bmi + polio_high + diphtheria_high + hiv_aids + gdp + thin_1_19 + HDI + schooling, data = le_df)
 summary(backward)
 check_collinearity(backward)
 ```
@@ -46,7 +46,7 @@ check_collinearity(backward)
 ## Use diagnostic plots to check model
 
 ```{r}
-backward = lm(le ~ status_Developed + adult_mort + bmi + polio_high + diphtheria_low + hiv_aids + gdp + thin_1_19 + HDI + schooling, data = le_df)
+backward = lm(le ~ status_Developed + adult_mort + bmi + polio_high + diphtheria_high + hiv_aids + gdp + thin_1_19 + HDI + schooling, data = le_df)
 
 par(mfrow = c(2, 2))
 par(mar = c(2,2,2,2))
@@ -73,9 +73,9 @@ le_df =
   le_df %>% 
   mutate(bc_le = (le)^2)
 
-backward_bc = lm(bc_le ~ status_Developed + adult_mort + bmi + polio_high + diphtheria_low + hiv_aids + gdp + thin_1_19 + HDI + schooling, data = le_df)
+backward_bc = lm(bc_le ~ status_Developed + adult_mort + bmi + polio_high + diphtheria_high + hiv_aids + gdp + thin_1_19 + HDI + schooling, data = le_df)
 
-backward = lm(le ~ status_Developed + adult_mort + bmi + polio_high + diphtheria_low + hiv_aids + gdp + thin_1_19 + HDI + schooling, data = le_df)
+backward = lm(le ~ status_Developed + adult_mort + bmi + polio_high + diphtheria_high + hiv_aids + gdp + thin_1_19 + HDI + schooling, data = le_df)
 
 par(mfrow = c(2, 1))
 par(mar = c(2,2,2,2))
@@ -112,7 +112,7 @@ influential_obs = as.numeric(names(cook)[(cook > cutoff)])
 #define new data frame with influential points removed
 no_influ_le = le_df[-influential_obs, ]
 
-no_influ_backward_bc = lm(bc_le ~ status_Developed + adult_mort + bmi + polio_high + diphtheria_low + hiv_aids + gdp + thin_1_19 + HDI + schooling, data = no_influ_le)
+no_influ_backward_bc = lm(bc_le ~ status_Developed + adult_mort + bmi + polio_high + diphtheria_high + hiv_aids + gdp + thin_1_19 + HDI + schooling, data = no_influ_le)
 summary(no_influ_backward_bc)
 ```
 
@@ -120,10 +120,10 @@ summary(no_influ_backward_bc)
 
 ```{r}
 # compare models with and without influential observations
-no_influ_backward_bc = lm(bc_le ~ status_Developed + adult_mort + bmi + polio_high + diphtheria_low + hiv_aids + gdp + thin_1_19 + HDI + schooling, data = no_influ_le)
+no_influ_backward_bc = lm(bc_le ~ status_Developed + adult_mort + bmi + polio_high + diphtheria_high + hiv_aids + gdp + thin_1_19 + HDI + schooling, data = no_influ_le)
 summary(no_influ_backward_bc)
 
-backward_bc = lm(bc_le ~ status_Developed + adult_mort + bmi + polio_high + diphtheria_low + hiv_aids + gdp + thin_1_19 + HDI + schooling, data = le_df)
+backward_bc = lm(bc_le ~ status_Developed + adult_mort + bmi + polio_high + diphtheria_high + hiv_aids + gdp + thin_1_19 + HDI + schooling, data = le_df)
 summary(backward_bc)
 ```
 
@@ -146,7 +146,7 @@ set.seed(1)
 train = trainControl(method = "cv", number = 5)
 
 # Fit the 4-variables model
-model = train(le ~ status_Developed + adult_mort + bmi + polio_high + diphtheria_low + hiv_aids + gdp + thin_1_19 + HDI + schooling, data = no_influ_le, trControl = train, method = 'lm', na.action = na.pass)
+model = train(le ~ status_Developed + adult_mort + bmi + polio_high + diphtheria_high + hiv_aids + gdp + thin_1_19 + HDI + schooling, data = no_influ_le, trControl = train, method = 'lm', na.action = na.pass)
 
 model$finalModel
 print(model)
@@ -170,12 +170,11 @@ avPlots(final_backward)
 
 ```{r}
 full_model =
-  lm(le ~ year + status_Developed + adult_mort + infantdeaths + alcohol + percent_exp + hepatitis_b_high + hepatitis_b_low + measles + bmi + under_five + polio_high + polio_low + total_exp + diphtheria_high + diphtheria_low + hiv_aids + gdp + population + thin_1_19 + thin_5_9 + HDI + schooling, data = le_df)
+  lm(le ~ status_Developed + adult_mort + infantdeaths + alcohol + percent_exp + hepatitis_b_high + measles + bmi + under_five + polio_high + total_exp + diphtheria_high + hiv_aids + gdp + population + thin_1_19 + thin_5_9 + HDI + schooling, data = le_df)
 
 forward_mod = stepAIC(full_model, direction = "forward", 
                       trace = FALSE, scope = formula(full_model))
-
-#view results of backward stepwise regression
+#view results of forward stepwise regression
 forward_mod$anova
 #view final model
 forward_mod$coefficients
