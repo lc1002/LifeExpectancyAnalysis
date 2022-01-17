@@ -25,10 +25,10 @@ le_df =
 ## Best Subsets Regression
 ```{r}
 full_model = 
-  lm(le ~ year + status_Developed + adult_mort + infantdeaths + alcohol + percent_exp + hepatitis_b_high + hepatitis_b_low + measles + bmi + under_five + polio_high + polio_low + total_exp + diphtheria_high + diphtheria_low + hiv_aids + gdp + population + thin_1_19 + thin_5_9 + HDI + schooling, data = le_df)
+  lm(le ~ year + status_Developed + adult_mort + infantdeaths + alcohol + percent_exp + hepatitis_b_high + measles + bmi + under_five + polio_high + total_exp + diphtheria_high + hiv_aids + gdp + population + thin_1_19 + thin_5_9 + HDI + schooling, data = le_df)
 summary(full_model)
 
-sub_fit = regsubsets(le ~ year + status_Developed + adult_mort + infantdeaths + alcohol + percent_exp + hepatitis_b_high + hepatitis_b_low + measles + bmi + under_five + polio_high + polio_low + total_exp + diphtheria_high + diphtheria_low + hiv_aids + gdp + population + thin_1_19 + thin_5_9 + HDI + schooling, data = le_df)
+sub_fit = regsubsets(le ~ year + status_Developed + adult_mort + infantdeaths + alcohol + percent_exp + hepatitis_b_high + measles + bmi + under_five + polio_high + total_exp + diphtheria_high + hiv_aids + gdp + population + thin_1_19 + thin_5_9 + HDI + schooling, data = le_df)
 
 best_summary = summary(sub_fit)
 best_summary_df = 
@@ -36,7 +36,7 @@ best_summary_df =
   remove_rownames() %>% 
   add_column(" " = c(1:8), .before = "year")
 
-table = as.data.frame(t(best_summary_df[-1])) %>% 
+as.data.frame(t(best_summary_df[-1])) %>% 
   rename("1" = "V1", "2" = "V2", "3" = "V3","4" = "V4", "5" = "V5", "6" = "V6","7" = "V7", "8" = "V8") %>% 
   knitr::kable()
 

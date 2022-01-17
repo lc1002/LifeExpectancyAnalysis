@@ -21,7 +21,7 @@ le_df =
 
 ```{r}
 model_7 =
-  lm(le ~ status_Developed + percent_exp + HDI + adult_mort + infantdeaths + schooling, data = le_df)
+  lm(le ~ status_Developed + percent_exp + HDI + adult_mort + infantdeaths + schooling + gdp + hiv_aids + gdp * percent_exp, data = le_df)
 
 summary(model_7)
 
@@ -56,10 +56,10 @@ bcle_df =
   le_df %>% 
   mutate(bc_le = (le)^2)
 
-model_7_bc = lm(bc_le ~ status_Developed + percent_exp + HDI + adult_mort + infantdeaths + schooling, data = bcle_df)
+model_7_bc = lm(bc_le ~ status_Developed + percent_exp + HDI + adult_mort + infantdeaths + schooling + gdp + hiv_aids + gdp * percent_exp, data = bcle_df)
 summary(model_7_bc)
 
-model_7 = lm(le ~ status_Developed + percent_exp + HDI + adult_mort + infantdeaths + schooling, data = le_df)
+model_7 = lm(le ~ status_Developed + percent_exp + HDI + adult_mort + infantdeaths + schooling + gdp + hiv_aids + gdp * percent_exp, data = le_df)
 summary(model_7)
 
 # compare diagnostic plots
@@ -86,21 +86,21 @@ par(mar = c(3,3,3,3))
 ## Identify influentical observations
 
 ```{r}
-plot(model_7, which = 5)
+plot(model_7_bc, which = 5)
 
 # Identify influential observations using Cook's distance
 cutoff <- 4/nrow(bcle_df)
 plot(model_7, which = 4, cook.levels = cutoff)
 abline(h = cutoff, lty = 2, col = "red")
 
-cook = cooks.distance(model_7)
+cook = cooks.distance(model_7_bc)
 influential_obs = as.numeric(names(cook)[(cook > cutoff)])
 
 #define new data frame with influential points removed
 no_influ_le = bcle_df[-influential_obs, ]
 
-no_influ_model_7 = lm(bc_le ~ status_Developed + percent_exp + HDI + adult_mort + infantdeaths + schooling, data = no_influ_le)
-summary(no_influ_model_7)
+no_influ_model_7_bc = lm(bc_le ~ status_Developed + percent_exp + HDI + adult_mort + infantdeaths + schooling + gdp + hiv_aids + gdp * percent_exp, data = no_influ_le)
+summary(no_influ_model_7_bc)
 ```
 
 ## Leverage checking 
@@ -108,24 +108,23 @@ summary(no_influ_model_7)
 ```{r}
 # compare models with and without influential observations
 
-no_influ_model_7 = lm(bc_le ~ status_Developed + percent_exp + HDI + adult_mort + infantdeaths + schooling, data = no_influ_le)
-summary(no_influ_model_7)
+no_influ_model_7_bc = lm(bc_le ~ status_Developed + percent_exp + HDI + adult_mort + infantdeaths + schooling + gdp + hiv_aids + gdp * percent_exp, data = no_influ_le)
+summary(no_influ_model_7_bc)
 
-model_7 = lm(bc_le ~ status_Developed + percent_exp + HDI + adult_mort + infantdeaths + schooling, data = bcle_df)
-summary(model_7)
+model_7_bc = lm(bc_le ~ status_Developed + percent_exp + HDI + adult_mort + infantdeaths + schooling + gdp + hiv_aids + gdp * percent_exp, data = bcle_df)
+summary(model_7_bc)
 
 ```
 
 ## Multi-collinearity
 
 ```{r}
-check_collinearity(no_influ_model_7)
+check_collinearity(no_influ_model_7_bc)
 ```
 
 ```{r}
-mod_7 = no_influ_model_7
+mod_7 = no_influ_model_7_bc
 ```
-
 
 ## Model Validation
 
@@ -136,7 +135,7 @@ set.seed(1)
 train = trainControl(method = "cv", number = 5)
 
 # Fit the 4-variables model
-model = train(bc_le ~ status_Developed + percent_exp + HDI + adult_mort + infantdeaths + schooling, data = no_influ_le, trControl = train, method = 'lm', na.action = na.pass)
+model = train(bc_le ~ status_Developed + percent_exp + HDI + adult_mort + infantdeaths + schooling + gdp + hiv_aids + gdp * percent_exp, data = no_influ_le, trControl = train, method = 'lm', na.action = na.pass)
 
 model$finalModel
 print(model)
