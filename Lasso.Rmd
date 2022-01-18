@@ -75,7 +75,7 @@ expectancy_test <- testing(initial_split)
 
 train_control = trainControl(method="cv", number = 5)
 
-model_lasso_cv = train(le ~ status_Developed + adult_mort + infantdeaths + alcohol + percent_exp + hepatitis_b_high + bmi + under_five + polio_high + total_exp + diphtheria_high + hiv_aids + gdp + thin_1_19 + thin_5_9 + HDI + schooling, data = expectancy_train[,-1], trControl=train_control, method="glmnet", preProcess = c("center", "scale"),tuneGrid = expand.grid(alpha = 0, lambda = best_lasso_lambda))
+model_lasso_cv = train(le ~ status_Developed + adult_mort + infantdeaths + alcohol + percent_exp + hepatitis_b_high + bmi + under_five + polio_high + total_exp + diphtheria_high + hiv_aids + gdp + thin_1_19 + thin_5_9 + HDI + schooling, data = expectancy_train[,-1], trControl=train_control, method="glmnet", preProcess = c("center", "scale"),tuneGrid = expand.grid(alpha = 1, lambda = best_lasso_lambda))
 
 lasso_pred = predict(model_lasso_cv, model.matrix(le ~ status_Developed + adult_mort + infantdeaths + alcohol + percent_exp + hepatitis_b_high + bmi + under_five + polio_high + total_exp + diphtheria_high + hiv_aids + gdp + thin_1_19 + thin_5_9 + HDI + schooling, expectancy_test)[,-1])
 
