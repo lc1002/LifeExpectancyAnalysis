@@ -1,0 +1,87 @@
+---
+title: "Lasso"
+author: "Lynn Chen"
+date: "1/17/2022"
+output: html_document
+---
+
+
+```{r}
+library(tidyverse)
+library(MASS)
+library(performance) # vif
+library(caret)
+library(car)
+library(Metrics)
+library(corrplot)
+library(glmnet)
+library(rsample)
+
+```
+
+
+```{r}
+le_df = 
+  read_csv("./data/Dummy_Data.CSV") 
+```
+
+## Lasso Regression
+```{r}
+#define response variable
+y = le_df$le
+
+#define matrix of predictor variables
+x = data.matrix(le_df[, c('status_Developed', 'adult_mort', 'infantdeaths', 'alcohol', 'percent_exp', 'hepatitis_b_high', 'measles', 'bmi', 'under_five', 'polio_high', 'total_exp', 'diphtheria_high', 'hiv_aids', 'gdp', 'population', 'thin_1_19', 'thin_5_9', 'HDI', 'schooling')])
+
+#perform k-fold cross-validation to find optimal lambda value
+cv_lasso_model <- cv.glmnet(x, y, alpha = 1)
+
+#find optimal lambda value that minimizes test MSE
+best_lasso_lambda <- cv_lasso_model$lambda.min
+best_lasso_lambda
+
+#produce plot of test MSE by lambda value
+plot(cv_lasso_model) 
+```
+
+## Analyze Final Model
+
+```{r}
+#find coefficients of best model
+best_lasso_model <- glmnet(x, y, alpha = 1, lambda = best_lasso_lambda)
+coef(best_lasso_model)
+
+#No coefficient is shown for the predictor measles and population because the lasso regression shrunk the coefficients all the way to zero. This means it was completely dropped from the model because it wasn’t influential enough.
+
+#use fitted best model to make predictions
+y_predicted <- predict(best_lasso_model, s = best_lasso_lambda, newx = x)
+
+#find SST and SSE
+sst <- sum((y - mean(y))^2)
+sse <- sum((y_predicted - y)^2)
+
+#find R-Squared
+rsq <- 1 - sse/sst
+rsq
+```
+
+## RMSE 
+```{r}
+#splitting data into testing and training sets
+set.seed(1)
+initial_split <- initial_split(le_df, prop = 0.75)
+expectancy_train <- training(initial_split)
+expectancy_test <- testing(initial_split)
+
+train_control = trainControl(method="cv", number = 5)
+
+model_lasso_cv = train(le ~ status_Developed + adult_mort + infantdeaths + alcohol + percent_exp + hepatitis_b_high + measles + bmi + under_five + polio_high + total_exp + diphtheria_high + hiv_aids + gdp + population + thin_1_19 + thin_5_9 + HDI + schooling, data = expectancy_train[,-1], trControl=train_control, method="glmnet", preProcess = c("center", "scale"),tuneGrid = expand.grid(alpha = 0, lambda = best_lasso_lambda))
+
+lasso_pred = predict(model_lasso_cv, model.matrix(le ~ status_Developed + adult_mort + infantdeaths + alcohol + percent_exp + hepatitis_b_high + measles + bmi + under_five + polio_high + total_exp + diphtheria_high + hiv_aids + gdp + population + thin_1_19 + thin_5_9 + HDI + schooling, expectancy_test)[,-1])
+
+lasso_rmse <- rmse(lasso_pred,expectancy_test$le)
+
+lasso_rmse
+
+```
+

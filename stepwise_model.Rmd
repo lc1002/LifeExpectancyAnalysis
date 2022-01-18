@@ -1,7 +1,5 @@
 ---
 title: "stepwise_model"
-author: "AnMei Chen"
-date: "1/5/2022"
 output: html_document
 ---
 
