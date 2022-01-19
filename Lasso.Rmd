@@ -82,6 +82,5 @@ lasso_pred = predict(model_lasso_cv, model.matrix(le ~ status_Developed + adult_
 lasso_rmse <- rmse(lasso_pred,expectancy_test$le)
 
 lasso_rmse
-
 ```
 
